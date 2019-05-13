@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+
+
+  <script src="js/jquery.js" type="text/javascript"></script>
+
+
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet href="gantt/platform.css" type="text/css">
+<link rel=stylesheet href="gantt/libs/jquery/dateField/jquery.dateField.css" type="text/css">
+
+<link rel=stylesheet href="gantt/gantt.css" type="text/css">
+<link rel=stylesheet href="gantt/ganttPrint.css" type="text/css" media="print">
+
+
+<script src="gantt/libs/jquery/jquery.livequery.1.1.1.min.js"></script>
+<script src="gantt/libs/jquery/jquery.timers.js"></script>
+
+<script src="gantt/libs/utilities.js"></script>
+<script src="gantt/libs/forms.js"></script>
+<script src="gantt/libs/date.js"></script>
+<script src="gantt/libs/dialogs.js"></script>
+<script src="gantt/libs/layout.js"></script>
+<script src="gantt/libs/i18nJs.js"></script>
+<script src="gantt/libs/jquery/dateField/jquery.dateField.js"></script>
+<script src="gantt/libs/jquery/JST/jquery.JST.js"></script>
+
+<script type="text/javascript" src="gantt/libs/jquery/svg/jquery.svg.min.js"></script>
+<script type="text/javascript" src="gantt/libs/jquery/svg/jquery.svgdom.1.8.js"></script>
+
+
+
+
+
+
+
+<script src="gantt/ganttUtilities.js"></script>
+<script src="gantt/ganttTask.js"></script>
+<script src="gantt/ganttDrawerSVG.js"></script>
+<script src="gantt/ganttZoom.js"></script>
+<script src="gantt/ganttGridEditor.js"></script>
+<script src="gantt/ganttMaster.js"></script>  
+<script src="gantt/calendar_gantt.js"></script>  
+
+</head>
+<body>
+
+</body>
+</html>
+
+
+
+ <style type="text/css">
+
+
+
+/*  @media screen and (max-width: 768px) {
+
+html, body{
+  width: 1024px!important;
+  overflow: auto;
+}
+
+  }
+  */
+
+.hide{
+  display: none!important
+}
+
+  .offlineButton{
+        height: 35px!important;
+    margin-top: 15px!important;
+    white-space: pre
+  }
+
+ .table>thead>tr>th{
+  padding: 2px!important
+ }
+
+
+
+    .calendaredit, .calendarcancel, .calendarsave{
+          height: 35px!important;
+        margin-top: 15px!important;
+    }
+
+
+
+        #workSpace .ganttButtonBar .buttons::-webkit-scrollbar-track
+    {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.6);
+        background-color: #fff;
+        box-shadow: none
+    }
+    #workSpace .ganttButtonBar .buttons::-webkit-scrollbar
+    {
+        width: 10px;
+        background-color: #F5F5F5;
+        height: 5px
+    }
+    #workSpace .ganttButtonBar .buttons::-webkit-scrollbar-thumb
+    {
+        background-color: #cacaca;
+    }
+
+
+        .thinScrollBar::-webkit-scrollbar-track
+    {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.6);
+        background-color: #fff;
+        box-shadow: none
+    }
+   .thinScrollBar::-webkit-scrollbar
+    {
+        width: 10px;
+        background-color: #F5F5F5;
+        height: 5px
+    }
+   .thinScrollBar::-webkit-scrollbar-thumb
+    {
+        background-color: #cacaca;
+    }
+
+
+
+  table th{ text-align: center; }
+
+  .sidebar-calendar{
+    overflow: auto;
+    position: fixed;
+    background-color: #89e1ec;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 310px;
+    z-index: 2000;
+    right: -310px
+
+  }
+
+.modal-card{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0; bottom: 0; left: 0; right: 0; position: fixed;z-index: 9999;
+    transition: all 0.1s linear;
+    visibility: visible;
+    opacity: 1;
+  }
+  .modal-card.close{
+    opacity: 0; visibility: hidden; transition: all 0.1s linear; top: -15vw
+  }
+  .modal{width: 300px;
+    background: white;
+    position: relative;
+    display: block!important;
+    font-size: 12px;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+  .modal.grey{
+    background: rgba(0,0,0,0.5)!important; 
+  }
+  .modal-card:before{
+    content: '';
+    position: fixed;
+    overflow: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: linear-gradient(to bottom right, #0c1317, #0c1317);
+    opacity: .9;
+  }
+  .modal >.modal-header{
+    font-size: 14px;
+    padding: 5px 15px;
+    border-bottom: 1px solid rgba(134,134,134,0.3);
+    display: flex;
+    font-weight: bold;
+    justify-content: center;
+  }
+  .modal-header-img{
+    padding-right: 8px; width: 13px; height: 11px;opacity: 0.6;
+  }
+  .modal-action{
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    border-top: 1px solid rgba(134,134,134,0.3);
+    height: 40px
+  }   
+
+  .modal-body{
+    display: flex;
+    align-items: center;
+    padding: 5px 15px 5px;
+    line-height: 15px;
+    font-family: 'montserrat-light';
+  }    
+  .modal-body p{
+    font-size: 14px
+  }   
+
+       /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+       #map {
+        height: 100%;
+       }
+       /* Optional: Makes the sample page fill the window. */
+       html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+       }
+
+       .modal-body.donotshow{
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+       }   
+       .modal p{
+        color: #929292;
+       }   
+       .modal.grey p{
+        color: white;
+       }   
+       .modal-action p{
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+        cursor: pointer;
+        margin: 0
+       }   
+       .modal-action p:first-child{
+        border:0;
+       }   
+
+       #nav_home{
+        background-color: #202334
+       }
+
+       #nav_home span{
+        color: #fff
+       }
+
+       .modal-action p:first-child{
+        background-color: #03a9f4;
+        color: white;
+        border-radius: 0 0 0 5px;
+        font-weight: bold
+       }
+       .cancel-modal.yes{
+        background-color: #bbbbbb!important;
+        color: white;
+        font-weight: bold;
+        border-radius: 0 0 5px 0
+       }
+       .toolbox-button{
+        height: 30px; width: 30px;border: 1px solid #ccc;display: flex;justify-content: center;align-items: center;margin-right: 10px
+       }
+       .toolbox-button img{
+        width: 20px; height: 20px
+       }
+       .cancel-modal.yes.blue{
+        background-color: skyblue!important
+       }
+
+
+
+  .sidebar-calendar.open{
+    right: 0!important;
+    transition: all 0.1s ease;
+  }
+
+  .overflower{
+    overflow: hidden;
+    position: relative;
+  }
+
+  label{
+   color: black
+ }
+
+ .ganttTaskEditor .formElements:not(#description) , .resourceEditor .formElements{
+   width: 100px!important;
+ }
+
+ .taskEditRow td:not(:nth-child(4)) input{
+   text-align: center;
+ }
+
+ th.gdfColHeader:nth-child(6),th.gdfColHeader:nth-child(8){
+   width: 80px!important
+ }
+
+
+ @media only screen and (max-width: 767px) {
+  .bwinPopupd{
+    width: 100%!important;
+    min-width: 100%!important;
+    top: 55px!important;
+    padding: 30px 0!important;
+    min-height: 350px!important;
+    max-height: 575px!important;
+  }
+}
+
+
+
+
+
+@media only screen and (min-width: 768px) {
+  .bwinPopupd{
+    width: 400px!important;
+    min-width: 400px!important
+  }
+}
+
+
+
+
+
+@font-face {
+  font-family: 'Fira Sans';
+  src: local('FiraSans-Regular'),
+  url('/media/fonts/FiraSans-Regular.woff2') format('woff2');
+}
+
+legend {
+  background-color: #000;
+  color: #fff;
+  padding: 3px 6px;
+}
+
+.output {
+  font: 1rem 'Fira Sans', sans-serif;
+}
+
+input,
+label {
+  width: 100%;
+}
+label {
+  display: inline-block;
+  font-size: .8rem;
+  margin-bottom: 0;
+  margin-top: 10px;
+}
+
+/*input:invalid + span:after {
+  content: '✖';
+  color: red;
+  padding-left: 5px;
+}
+
+input:valid + span:after {
+  content: '✓';
+  color: green;
+  padding-left: 5px;
+}
+*/
+
+td{
+  position: relative;
+}
+
+#starts_inputDate{
+  position: absolute;
+  top: 0;
+  right: 20px
+}
+
+#ends_inputDate{
+  position: absolute;
+  top: 0;
+  right: 20px
+}
+
+label[for='startIsMilestone'], label[for='endIsMilestone'], #endIsMilestone, #startIsMilestone {
+  display: none;
+}
+
+
+
+svg:not(:root){
+  overflow: visible!important
+}
+
+/*.gdfTable th:nth-child(n+3) {
+    width: 100px!important;
+}*/
+
+.gdfTable th:nth-child(4) {
+    width: 150px!important;
+}
+
+.gdfTable th:nth-child(5), .gdfTable th:nth-child(7) {
+    width: 20px!important;
+}
+
+
+
+    .gdfTable thead tr th:nth-child(9) {
+              width: 55px!important;
+            }
+
+            .gdfTable thead tr th:nth-child(10) {
+              width: 70px!important;
+            }
+
+            .gdfTable thead tr th:nth-child(11) {
+              width: 60px!important;
+            }
+
+
+
+  .gdfTable th:nth-child(n+3) {
+              /*width: 150px!important;*/
+              padding: 0!important
+            }
+
+            .gdfTable thead tr th:nth-child(1) {
+              width: 35px!important;
+            }
+
+
+            .gdfTable thead tr th:nth-child(2) {
+              width: 25px!important;
+            }
+
+
+footer{
+  display: none
+}
+
+  .gdfTable th{
+      background-color: #ffffff!important;
+      color: black!important
+
+    }
+
+
+
+            .gdfTable tbody tr td.gdfCell:not(:nth-child(4)) input{
+              text-align: center
+            }
+
+
+    .gdfTable th p, .gdfTable th span{
+      color: white!important;
+
+    }
+
+  .splitBox2 th{
+      background-color: #ffffff!important;
+      color: black!important
+
+    }
+
+    .splitBox2 th p, .splitBox2 th span{
+      color: white!important;
+
+    }
+
+        .splitElement.vSplitBar{
+      background-color: #ffffff!important;
+    }
+
+
+</style>
+
+
+
+<!-- 
+  <link rel=stylesheet href="gantt/platform.css" type="text/css">
+  <link rel=stylesheet href="gantt/libs/jquery/dateField/jquery.dateField.css" type="text/css">
+
+  <link rel=stylesheet href="gantt/gantt.css" type="text/css">
+  <link rel=stylesheet href="gantt/ganttPrint.css" type="text/css" media="print">
+
+
+  <script src="gantt/libs/jquery/jquery.livequery.1.1.1.min.js"></script>
+  <script src="gantt/libs/jquery/jquery.timers.js"></script>
+
+  <script src="gantt/libs/utilities.js"></script>
+  <script src="gantt/libs/forms.js"></script>
+  <script src="gantt/libs/date.js"></script>
+  <script src="gantt/libs/dialogs.js"></script>
+  <script src="gantt/libs/layout.js"></script>
+  <script src="gantt/libs/i18nJs.js"></script>
+  <script src="gantt/libs/jquery/dateField/jquery.dateField.js"></script>
+  <script src="gantt/libs/jquery/JST/jquery.JST.js"></script>
+
+  <script type="text/javascript" src="gantt/libs/jquery/svg/jquery.svg.min.js"></script>
+  <script type="text/javascript" src="gantt/libs/jquery/svg/jquery.svgdom.1.8.js"></script>
+
+
+  <script src="gantt/ganttUtilities.js"></script>
+  <script src="gantt/ganttTask.js"></script>
+  <script src="gantt/ganttDrawerSVG.js"></script>
+  <script src="gantt/ganttZoom.js"></script>
+  <script src="gantt/ganttGridEditor.js"></script>
+  <script src="gantt/ganttMaster.js"></script>  
+-->
+
+<script type="text/javascript">
+
+
+
+ function closeModal(a){
+
+    $(a).parents(".modal-card").addClass('close')
+      $(a).parents(".modal-card1").addClass('close1')
+
+
+     }
+
+function reflayerlink(a){
+  console.log('clickedasas44a')
+
+  console.log(event)
+
+  event.stopPropagation();
+
+
+  var standalone = false
+
+  var baseRegex = new RegExp( `${ window.location.hostname}` );
+
+  if ( window.matchMedia( '(display-mode: standalone)' ).matches ) {
+    standalone = true
+
+  }
+
+
+
+  var domain = window.location.origin
+
+// var url = "https://www.easypermit.net" + $(this).attr('data-link').replace(/^.*\/\/[^\/]+/, '')
+var url = domain + $(a).attr('data-link').replace(/^.*\/\/[^\/]+/, '')
+
+
+window.open(url, '_blank');
+
+
+// if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent)) { 
+
+
+//  if(standalone == true) {
+
+//    console.log('standalone')
+
+//    // window.location.href = url
+//    window.open(url, '_blank');
+//  }
+//  else{
+
+//    console.log('hiii')
+//    window.open(url, '_blank');
+//  }
+
+
+// }else 
+// {
+
+//  window.open(url, '_blank');
+
+// }
+
+
+
+
+
+}
+
+
+function openDrawingLink(v){
+  console.log($(v).attr('taskid'))
+  var a = $(v).attr('taskid')
+
+// alert('clicked')
+
+for( i = 0; i < originalTaskData.tasks.length; i++){
+
+  if(originalTaskData.tasks[i].id == $(v).attr('taskid')){
+
+    if(originalTaskData.tasks[i]){
+      if(originalTaskData.tasks[i].hasOwnProperty('filelocation')){
+
+
+        var domain = window.location.origin
+
+// var url = "https://www.easypermit.net" + $(this).attr('data-link').replace(/^.*\/\/[^\/]+/, '')
+var url = domain + "/#/drawing?filelocation=" + originalTaskData.tasks[i].filelocation
+
+console.log(url)
+
+
+console.log(url.substring(url.lastIndexOf('/')+1))
+
+  localStorage.setItem('drwFileName', url.substring(url.lastIndexOf('/')+1));
+  localStorage.setItem('drwFileURL', url.substring(url.lastIndexOf('/')+1));
+
+
+var standalone = false
+
+var baseRegex = new RegExp( `${ window.location.hostname}` );
+
+if ( window.matchMedia( '(display-mode: standalone)' ).matches ) {
+  standalone = true
+
+}
+
+
+
+window.open("offline.html", '_blank');
+
+
+// window.open(url, '_blank');
+
+
+// if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent)) { 
+
+
+//  if(standalone == true) {
+
+//    console.log('standalone')
+
+//    window.open(url, '_blank');
+
+//    // window.location.href = url
+//  }
+//  else{
+
+//    console.log('hiii')
+//    window.open(url, '_blank');
+//  }
+
+
+// }else 
+// {
+
+//  window.open(url, '_blank');
+
+// }
+
+
+
+}
+}
+
+}
+
+}
+
+}
+
+
+
+  $(document).on('mousedown', '.dateField', function(e) {
+  console.log("hehehehe")
+    $(this).blur();
+});
+
+	var ge;
+
+	// Hide Header on on scroll down
+var didScroll;
+var lastScrollTop = 0;
+var delta = 5;
+var navbarHeight = $('.mainNavContent').outerHeight();
+
+$(window).scroll(function(event){
+    didScroll = true;
+console.log('up')
+});
+
+setInterval(function() {
+    if (didScroll) {
+        hasScrolled();
+        didScroll = false;
+    }
+}, 1);
+
+function hasScrolled() {
+    var st = $(this).scrollTop();
+    
+    // Make sure they scroll more than delta
+    if(Math.abs(lastScrollTop - st) <= delta)
+        return;
+    
+    // If they scrolled down and are past the navbar, add class .nav-up.
+    // This is necessary so you never see what is "behind" the navbar.
+    if (st > lastScrollTop){
+        // Scroll Down
+        // $('.mainNavContent').removeClass('nav-down').addClass('nav-up');
+        $('.navbar-collapse, .navbar').removeClass('nav-down').addClass('nav-up');
+    } else {
+        // Scroll Up
+        if(st + $(window).height() < $(document).height()) {
+            // $('.mainNavContent').removeClass('nav-up').addClass('nav-down');
+            $('.navbar-collapse, .navbar').removeClass('nav-up').addClass('nav-down');
+        }
+    }
+    
+    lastScrollTop = st;
+}
+
+
+$('input').focus(function(e) {
+    $(this).blur();
+});
+
+
+     // function calendar1(a){
+
+     //                    console.log("JAVA")
+     //                    console.log(a)
+
+
+     //            }
+
+	$(function(){
+
+
+
+
+
+   // app.controller('MainCtrl', ["$scope", "$http", "$filter", "$localStorage", "$window", "$uibModal", function ($scope, $http, $filter, $localStorage, $window, $uibModal) {
+
+
+    var CALENDAR_LIST
+    var PROJECT_LIST
+
+
+
+
+
+
+    selectedCalendar = "third"
+
+    console.log(mainCalendar)
+
+
+    var RESOURCE_USER_LIST
+
+    function auto_grow(element) {
+      element.style.height = "5px";
+      element.style.height = (element.scrollHeight)+"px";
+    }
+
+
+
+
+
+
+  var canWrite=true; //this is the default for test purposes
+
+  // here starts gantt initialization
+  ge = new GanttMaster();
+  ge.set100OnClose=true;
+
+  ge.init($("#workSpace"));
+  // loadI18n(); //overwrite with localized ones
+
+  //in order to force compute the best-fitting zoom level
+  delete ge.gantt.zoom;
+
+
+   
+
+
+ loadFromLocalStorage();
+
+
+
+
+  // var _global_usertype,_global_userinvited,_global_supervisor
+
+  // 					$scope.projectreport = true
+		// 						$scope.isInspector = false
+
+
+//   jQuery.ajax({
+//     url: "/assets/views/phppages/allProjectController.php?getUserType=getUserType",
+//     async: false,
+//     success: function (data) {
+
+
+//       console.log("datssssssssssssssssssssssssssssssa")
+//       console.log(data)
+//       var obj = JSON.parse(data)
+//       console.log(obj)
+
+//       	if(obj.INVITED == 1){
+
+//       		console.log("zzzzz")
+
+//       		$scope.isInspector = true
+
+// 					$(".calendaredit").addClass('hide')
+
+
+// }
+
+//       _global_usertype = obj.USERTYPE 
+//       _global_userinvited = obj.INVITED 
+//       _global_supervisor = obj.SUPERVISOR 
+//       _global_owner = obj.OWNER 
+
+
+
+//           // $(".requireWrite").removeClass('hide')
+//            $(".buttons>a").addClass('hide')
+           
+//            $("#fullscrbtn").addClass('hide')
+//       $(".newproject").addClass('hide')
+//  $(".ganttButtonBar button:lt(11) span").addClass('hide')
+//  $(".ganttButtonBar .ganttButtonSeparator:lt(6)").addClass('hide')
+
+// if(  _global_usertype == 3 ||  _global_usertype == 2 ){
+
+
+
+//  $(".calendaredit").addClass('hide')
+
+//    //   $('button').prop("disabled", true);
+//    // $(".requireCanWrite").hide()
+
+//           // $(".requireWrite.first").addClass('hide')
+//    //  $('button').removeAttr("disabled");
+
+// }else{
+
+//      // $('button').prop("disabled", true);
+//    // $(".requireCanWrite").show()
+//     // $('button').removeAttr("disabled");
+//           // $(".requireWrite.first").removeClass('hide')
+
+// }
+// }
+// })
+
+
+ 
+// }])
+})
+
+
+    if($(window).width() < 768){
+
+          $("#TWGanttArea").height($(window).height() - 150)
+
+    }
+
+</script>
+
+<div class="container-fluid container-fullw bg-white" style="padding-bottom: 0!important">
+	<div class="row no-margin">
+		<div class="col-md-12 no-padding">
+			<!-- Start: HEADER SUB MENU CREATED BY ASHWIN BHAYAL 05/03/2016 -->          
+			<!-- End: HEADER SUB MENU CREATED BY ASHWIN BHAYAL 05/03/2016 -->
+			<!-- /// controller:  'CalendarCtrl' -  localtion: assets/js/controllers/calendarCtrl.js /// -->
+			<div ng-controller="MainCtrl" id="demo">
+
+
+              <div id="deleteEvent-modal" class="modal-card close">
+        <div class="modal">
+          <div class="modal-header">
+            <p>이벤트 삭제</p>
+          </div>
+          <div class="modal-body donotshow">
+            <p style="padding: 0 4px; font-weight: bold">이 이벤트를 삭제합니다. 포함된 레이어와 도면 이미지까지 복구 되지 않습니다. 계속하시겠습니까?</p>
+          </div>
+          <div class="modal-action">
+            <p id="deleteEvent-action" onclick='$("#deleteEvent-modal").addClass("close"); eventDelete()'>삭제</p>
+            <p onclick='$(this).parents(".modal-card").addClass("close")' class="cancel-deleted-modal yes">취소</p>
+          </div>
+        </div>
+      </div>
+
+            <div id="saveAlert-modal" class="modal-card close">
+        <div class="modal grey">
+          <div class="modal-header">
+            <p>등록완료</p>
+          </div>
+          <div class="modal-body donotshow">
+            <p style="padding: 0 4px; font-weight: bold">입력내용이 등록되었습니다.  저장버튼을 눌러 저장하여 주세요</p>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="editBlocked-modal" class="modal-card close">
+        <div class="modal">
+          <div class="modal-header">
+            <p>편집중</p>
+          </div>
+          <div class="modal-body donotshow">
+            <p style="padding: 0 4px; font-weight: bold">다른사용자에 의해 편집중입니다. 잠시 후 다시 시도하여주세요</p>
+          </div>
+          <div class="modal-action">
+            <p class="cancel-modal yes blue" onclick='$(this).parents(".modal-card").addClass("close")'  style="border-radius: 0 0 5px 5px!important">확인</p>
+          </div>
+        </div>
+      </div>  
+
+
+      <div id="moveToOnline-modal" class="modal-card close">
+        <div class="modal">
+          <div class="modal-header">
+            <p>온라인 환경으로 이동</p>
+          </div>
+          <div class="modal-body donotshow">
+            <p style="padding: 0 4px; font-weight: bold"> 온라인 환경으로 이동하여 계속합니다. 저장하지 않은 자료는 삭제됩니다</p>
+          </div>
+          <div class="modal-action">
+            <p id="moveToOnline-action" onmousedown="Android.showToast('goOnline')">이동</p>
+            <p onmousedown="closeModal(this)" class="cancel-modal yes">취소</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="clean-modal" class="modal-card close">
+        <div class="modal">
+          <div class="modal-header">
+            <p>로컬 현황기록 삭제</p>
+          </div>
+          <div class="modal-body donotshow">
+            <p style="padding: 0 4px; font-weight: bold"> 사용중인 현황기록 페이지와 포함된 자료를 모두 삭제하고 온라인 환경으로 이동합니다</p>
+          </div>
+          <div class="modal-action">
+            <p id="clean-action" onmousedown="Android.showToast('clearFiles')">모두지우기</p>
+            <p onmousedown="closeModal(this)" class="cancel-modal yes">취소</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="updateFiles-modal" class="modal-card close">
+        <div class="modal">
+          <div class="modal-header">
+            <p>서버로 페이지 업로드</p>
+          </div>
+          <div class="modal-body donotshow">
+            <p style="padding: 0 4px; font-weight: bold"> 이 현황기록 페이지와 포함된 모든 자료로 프로젝트 현황기록 페이지를 업데이트합니다 </p>
+          </div>
+          <div class="modal-action">
+            <p id="updateFiles-action" onmousedown="$('#updateFilesDouble-modal').removeClass('close')">업데이트</p>
+            <p onmousedown="closeModal(this)" class="cancel-modal yes">취소</p>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="updateFilesDouble-modal" class="modal-card close">
+        <div class="modal">
+          <div class="modal-header">
+            <p>확인</p>
+          </div>
+          <div class="modal-body donotshow">
+            <p style="padding: 0 4px; font-weight: bold"> 서버에 저장된 자료가 이 로컬자료로 대체되며 기존자료는 복구되지 않습니다. 계속하시겠습니끼?</p>
+          </div>
+          <div class="modal-action">
+            <p id="updateFilesDouble-action" onmousedown="Android.showToast('updateFiles')">업데이트</p>
+            <p onmousedown="closeModal(this)" class="cancel-modal yes">취소</p>
+          </div>
+        </div>
+      </div>
+
+
+<div style="display:flex;overflow: auto;align-items: center;" class="thinScrollBar">
+       <b style="font-size: 25px;color: #2071a1;margin-left: 10px; white-space:pre" class="ng-binding">전체일정</b>
+      <button onclick="$('#moveToOnline-modal').removeClass('close')" class="button first offlineButton big requireWrite" title="DownloadOffline" style="margin-left:20px">온라인 작업</button>
+      <button onclick="$('#updateFiles-modal').removeClass('close')" class="button first offlineButton big requireWrite" title="DownloadOffline" style="margin-left:20px">서버로 업로드</button>
+      <button onclick="$('#clean-modal').removeClass('close')" class="button first big offlineButton requireWrite" title="DownloadOffline" style="margin-left:20px">모두 지우기</button>
+
+</div>
+
+
+        <div id="workSpace" style="padding:0px; overflow-y:auto; overflow-x:hidden;border:1px solid #e5e5e5;position:relative;margin:0"></div>
+
+        <style>
+        .resEdit {
+          padding: 15px;
+        }
+
+        .resLine {
+          width: 95%;
+          padding: 3px;
+          margin: 5px;
+          border: 1px solid #d0d0d0;
+        }
+
+/*  body {
+    overflow: hidden;
+    }*/
+
+    .ganttButtonBar h1{
+      color: #000000;
+      font-weight: bold;
+      font-size: 28px;
+      margin-left: 10px;
+    }
+
+  </style>
+
+  
+
+  <form id="gimmeBack" style="display:none;" action="../gimmeBack.jsp" method="post" target="_blank"><input type="hidden" name="prj" id="gimBaPrj"></form>
+
+
+
+
+
+  <div id="gantEditorTemplates" style="display:none;">
+<div class="__template__" type="GANTBUTTONS"><!--
+  <div class="ganttButtonBar noprint">
+    <div class="buttons">
+      <a href="https://gantt.twproject.com/"><img src="res/twGanttLogo.png" alt="Twproject" align="absmiddle" style="max-width: 136px; padding-right: 15px;display:none"></a>
+
+      <button onclick="$('#workSpace').trigger('undo.gantt');return false;" class="button textual icon requireCanWrite" title="이전으로"><span class="teamworkIcon">&#39;</span></button>
+      <button onclick="$('#workSpace').trigger('redo.gantt');return false;" class="button textual icon requireCanWrite" title="다음으로"><span class="teamworkIcon">&middot;</span></button>
+      <span class="ganttButtonSeparator addbuttonhere requireCanWrite requireCanAdd"></span>
+      <button onclick="$('#workSpace').trigger('addAboveCurrentTask.gantt');return false;" class="button addbuttonhere textual icon requireCanWrite requireCanAdd" title="위쪽에 새 일정 생성"><span class="teamworkIcon">l</span></button>
+      <button onclick="$('#workSpace').trigger('addBelowCurrentTask.gantt');return false;" class="button addbuttonhere textual icon requireCanWrite requireCanAdd" title="아래쪽에 새 일정생성"><span class="teamworkIcon">X</span></button>
+      <span class="ganttButtonSeparator requireCanWrite requireCanInOutdent"></span>
+      <button onclick="$('#workSpace').trigger('outdentCurrentTask.gantt');return false;" class="button textual icon requireCanWrite requireCanInOutdent" title="선택 된 일정을 상위 카테고리로"><span class="teamworkIcon">.</span></button>
+      <button onclick="$('#workSpace').trigger('indentCurrentTask.gantt');return false;" class="button textual icon requireCanWrite requireCanInOutdent" title="선택 된 일정을 하위 카테고리로"><span class="teamworkIcon">:</span></button>
+      <span class="ganttButtonSeparator requireCanWrite requireCanMoveUpDown"></span>
+      <button onclick="$('#workSpace').trigger('moveUpCurrentTask.gantt');return false;" class="button textual icon requireCanWrite requireCanMoveUpDown" title="선택 된 일정을 위로 이동"><span class="teamworkIcon">k</span></button>
+      <button onclick="$('#workSpace').trigger('moveDownCurrentTask.gantt');return false;" class="button textual icon requireCanWrite requireCanMoveUpDown" title="선택 된 일정을 아래로 이동"><span class="teamworkIcon">j</span></button>
+      <span class="ganttButtonSeparator requireCanDelete addbuttonhere"></span>
+      <button onclick="$('#deleteEvent-modal').removeClass('close');console.log(originalTaskData);console.log('testuinggggg');return false;" class="button textual icon delete requireCanWrite" title="선택 된 일정을 삭제"><span class="teamworkIcon">&cent;</span></button>
+      <span class="ganttButtonSeparator"></span>
+      <button onclick="$('#workSpace').trigger('expandAll.gantt');return false;" class="button textual icon hide " title="우측화면 최대로"><span class="teamworkIcon">6</span></button>
+      <button onclick="$('#workSpace').trigger('collapseAll.gantt'); return false;" class="button textual icon hide " title="좌측화면 최대로"><span class="teamworkIcon">5</span></button>
+
+      <button onclick="$('#workSpace').trigger('zoomMinus.gantt'); return false;" class="button textual icon " title="축소하기"><span class="teamworkIcon">)</span></button>
+      <button onclick="$('#workSpace').trigger('zoomMinus.gantt'); return false;" class="button textual icon " title="축소하기"><span class="teamworkIcon">)</span></button>
+      <button onclick="$('#workSpace').trigger('zoomPlus.gantt');return false;" class="button textual icon " title="확대하기"><span class="teamworkIcon">(</span></button>
+    <span class="ganttButtonSeparator hide"></span>
+      <button onclick="print();return false;" class="button hide textual icon " title="Print"><span class="teamworkIcon">p</span></button>
+
+      <button onclick="ge.splitter.resize(.1);return false;" title="오른쪽 화면만 보기" class="button textual icon" ><span class="teamworkIcon">F</span></button>
+      <button onclick="ge.splitter.resize(50);return false;" title="양쪽화면 같게" class="button textual icon" ><span class="teamworkIcon">O</span></button>
+      <button onclick="ge.splitter.resize(100);return false;" title="왼쪽화면만 보기" class="button textual icon"><span class="teamworkIcon">R</span></button>
+      <span class="ganttButtonSeparator"></span>
+      <button onclick="$('#workSpace').trigger('fullScreen.gantt');return false;" class="button textual icon" title="좌우화면 같은 사이즈로" id="fullscrbtn"><span class="teamworkIcon">@</span></button>
+
+    <button onclick="editResources();" class="button textual requireWrite editresource" title="작업인원 등록 관리 resources"><span class="teamworkIcon">M</span></button>
+   
+  <p id="switch-text" style="font-size:12px;color:#2b9af3;text-align:center;padding-top:6px;min-width:70px;display:none"><span>일반관리자<br><span>편집권한</span></p>
+
+  <div id="lock-toggle" style="display:none">
+                                        <input type="hidden" id="leverValue" val="0">
+                                <div class="switch">
+                                    <label>
+                                        <input type="checkbox" id="multidrawValue" val="off">
+                                        <span class="lever">
+                                            <span class="on">허용</span>
+                                            <span class="off">제한</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+    <button onclick="saveGanttOnServer(1);" class="calendarsave hide button first big requireWrite" title="Save" style="margin-left:20px">Save</button>
+    
+    <button onclick="allowedit(this);" ng-if=buttonStatus == 1" class="calendaredit hide button first big requireWrite" title="Save" style="margin-left:20px">Edit</button>
+    <button onclick="stopedit(this,0);" class="calendarcancel hide button first big requireWrite" title="Save" style="margin-left:20px">Cancel</button>
+    <button onclick='newProject();' class='button hide requireWrite newproject'><em>clear project</em></button>
+    <button class="button login" title="login/enroll" onclick="loginEnroll($(this));" style="display:none;">login/enroll</button>
+    <button class="button opt collab" title="Start with Twproject" onclick="collaborate($(this));" style="display:none;"><em>collaborate</em></button>
+    </div></div>
+--></div>
+
+<div class="__template__" type="TASKSEDITHEAD"><!--
+  <table class="gdfTable" cellspacing="0" cellpadding="0">
+    <thead>
+    <tr style="height:40px">
+      <th class="gdfColHeader" style="width:17px; border-right: none"></th>
+      <th class="gdfColHeader" style="width:25px;"></th>
+      <th class="gdfColHeader gdfResizable" style="width:100px;">코드명</th>
+      <th class="gdfColHeader gdfResizable" style="width:300px;">일정명</th>
+      <th class="gdfColHeader"  align="center" style="width:17px;" title="Start date is a milestone."><span class="teamworkIcon" style="font-size: 8px;">^</span></th>
+      <th class="gdfColHeader gdfResizable" style="width:80px;">시작일</th>
+      <th class="gdfColHeader"  align="center" style="width:17px;" title="End date is a milestone."><span class="teamworkIcon" style="font-size: 8px;">^</span></th>
+      <th class="gdfColHeader gdfResizable" style="width:80px;">마감일</th>
+      <th class="gdfColHeader gdfResizable" style="width:50px;">기간(일)</th>
+      <th class="gdfColHeader gdfResizable" style="width:20px;">진행율(%)</th>
+      <th class="gdfColHeader gdfResizable requireCanSeeDep" style="width:50px;">이전일정</th>
+      <th class="gdfColHeader gdfResizable" style="width:400px;padding-left: 10px;">투입자원</th>
+    </tr>
+    </thead>
+  </table>
+--></div>
+
+<div class="__template__" type="TASKROW">
+<!--   <tr taskId="(#=obj.id#)" class="taskEditRow (#=obj.isParent()?'isParent':''#) (#=obj.collapsed?'collapsed':''#)" level="(#=level#)">
+    <th class="gdfCell edit" align="right" style="cursor:pointer;"><span class="taskRowIndex">(#=obj.getRow()+1#)</span> <span class="teamworkIcon" style="font-size:12px;" >e</span></th>
+    <td class="gdfCell noClip" align="center"><div class="taskStatus cvcColorSquare" status="(#=obj.status#)"></div></td>
+    <td class="gdfCell"><input type="text" name="code" value="(#=obj.code?obj.code:''#)" placeholder="code/short name"></td>
+    <td class="gdfCell indentCell" style="padding-left:(#=obj.level*10+18#)px;">
+      <div class="exp-controller" align="center"></div>
+      <input type="text" autocomplete="off" class="taskRowInput" name="name" value="(#=obj.name#)" placeholder="새로운일정" onfocus="if($(this).val() == '새로운 일정'){$(this).val('')};$(this).prop('placeholder', '')" onblur="$(this).prop('placeholder', '새로운 일정')">
+    </td>
+    <td class="gdfCell" align="center"><input type="checkbox" name="startIsMilestone"></td>
+    <td class="gdfCell"><input type="text" class="form-control date" name="start" uib-datepicker-popup="{{format}}" ng-model="dt1" is-open="status1.opened" max-date="maxDatedt2" datepicker-options="dateOptions" date-disabled="disabled(date, mode)" ng-required="true" close-text="Close" id="fromdate"/></td>
+    <td class="gdfCell" align="center"><input type="checkbox" name="endIsMilestone"></td>
+    <td class="gdfCell"><input type="text" name="end" value="" class="date"></td>
+    <td class="gdfCell"><input type="text" name="duration" autocomplete="off" value="(#=obj.duration#)"></td>
+    <td class="gdfCell"><input type="text" name="progress" class="validated" entrytype="PERCENTILE" autocomplete="off" value="(#=obj.progress?obj.progress:''#)" (#=obj.progressByWorklog?"readOnly":""#)></td>
+    <td class="gdfCell requireCanSeeDep"><input type="text" name="depends" autocomplete="off" value="(#=obj.depends#)" (#=obj.hasExternalDep?"readonly":""#)></td>
+    <td class="gdfCell taskAssigs">(#=obj.getAssigsString()#)</td>
+  </tr> -->
+</div>
+
+<div class="__template__" type="TASKEMPTYROW"><!--
+  <tr class="taskEditRow emptyRow" >
+    <th class="gdfCell" align="right"></th>
+    <td class="gdfCell noClip" align="center"></td>
+    <td class="gdfCell"></td>
+    <td class="gdfCell"></td>
+    <td class="gdfCell"></td>
+    <td class="gdfCell"></td>
+    <td class="gdfCell"></td>
+    <td class="gdfCell"></td>
+    <td class="gdfCell"></td>
+    <td class="gdfCell"></td>
+    <td class="gdfCell requireCanSeeDep"></td>
+    <td class="gdfCell"></td>
+  </tr>
+--></div>
+
+
+<div class="__template__" type="TASKBAR"><!--
+  <div class="taskBox taskBoxDiv" taskId="(#=obj.id#)" >
+    <div class="layout (#=obj.hasExternalDep?'extDep':''#)">
+      <div class="taskStatus" status="(#=obj.status#)"></div>
+      <div class="taskProgress" style="width:(#=obj.progress>100?100:obj.progress#)%; background-color:(#=obj.progress>100?'red':'rgb(153,255,51);'#);"></div>
+      <div class="milestone (#=obj.startIsMilestone?'active':''#)" ></div>
+
+      <div class="taskLabel"></div>
+      <div class="milestone end (#=obj.endIsMilestone?'active':''#)" ></div>
+    </div>
+  </div>
+--></div>
+
+<div class="__template__" type="CHANGE_STATUS"><!--
+    <div class="taskStatusBox">
+      <div class="taskStatus cvcColorSquare" status="STATUS_ACTIVE" title="진행중"></div>
+      <div class="taskStatus cvcColorSquare" status="STATUS_DONE" title="완료"></div>
+      <div class="taskStatus cvcColorSquare" status="STATUS_FAILED" title="실패"></div>
+      <div class="taskStatus cvcColorSquare" status="STATUS_SUSPENDED" title="중지"></div>
+      <div class="taskStatus cvcColorSquare" status="STATUS_UNDEFINED" title="기타"></div>
+    </div>
+  --></div>
+
+
+
+
+
+<div class="__template__" type="TASK_EDITOR"><!--
+  <div class="ganttTaskEditor">
+    <h2 class="taskData">일정요약</h2>
+    <table  cellspacing="1" cellpadding="5" width="100%" class="taskData table" border="0">
+          <tr>
+        <td width="200" style="height: 80px"  valign="top">
+          <label for="code">코드명</label><br>
+          <input type="text" name="code" id="code" value="" size=15 class="formElements" autocomplete='off' maxlength=255 style='width:100%' oldvalue="1">
+        </td>
+        <td colspan="3" valign="top"><label for="name" class="required">일정명</label><br><input type="text" name="name" id="name"class="formElements" autocomplete='off' maxlength=255 style='width:100%' value="" required="true" oldvalue="1"></td>
+          </tr>
+
+
+      <tr class="dateRow">
+        <td nowrap="">
+          <div style="position:relative">
+            <label for="start">시작일</label>&nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="checkbox" id="startIsMilestone" name="startIsMilestone" value="yes"> &nbsp;<label for="startIsMilestone">is milestone</label>&nbsp;
+            <br><input type="text" name="start" id="start" onfocus="$(this).blur()" size="8" class="formElements dateField validated date" autocomplete="off" maxlength="255" value="" oldvalue="1" entrytype="DATE">
+            <span title="calendar" id="starts_inputDate" class="teamworkIcon openCalendar" onclick="$(this).dateField({inputField:$(this).prevAll(':input:first'),isSearchField:false});">m</span>          </div>
+        </td>
+        <td nowrap="">
+          <label for="end">종료일</label>&nbsp;&nbsp;&nbsp;&nbsp;
+          <input type="checkbox" id="endIsMilestone" name="endIsMilestone" value="yes"> &nbsp;<label for="endIsMilestone">is milestone</label>&nbsp;
+          <br><input type="text" name="end" id="end" onfocus="$(this).blur()" size="8" class="formElements dateField validated date" autocomplete="off" maxlength="255" value="" oldvalue="1" entrytype="DATE">
+          <span title="calendar" id="ends_inputDate" class="teamworkIcon openCalendar" onclick="$(this).dateField({inputField:$(this).prevAll(':input:first'),isSearchField:false});">m</span>
+        </td>
+        <td nowrap="" >
+          <label for="duration" class=" ">수행기간</label><br>
+          <input type="text" name="duration" id="duration" size="4" class="formElements validated durationdays center" title="Duration is in working days." autocomplete="off" maxlength="255" value="" oldvalue="1" entrytype="DURATIONDAYS" disabled readonly>&nbsp;
+        </td>
+      </tr>
+
+      <tr>
+        <td  colspan="2">
+          <label for="status" class=" ">현재상태</label><br>
+          <select id="status" name="status" class="taskStatus" status="(#=obj.status#)"  onchange="$(this).attr('STATUS',$(this).val());">
+            <option value="STATUS_ACTIVE" class="taskStatus" status="STATUS_ACTIVE" >진행중</option>
+            <option value="STATUS_SUSPENDED" class="taskStatus" status="STATUS_SUSPENDED" >중지</option>
+            <option value="STATUS_DONE" class="taskStatus" status="STATUS_DONE" >완료</option>
+            <option value="STATUS_FAILED" class="taskStatus" status="STATUS_FAILED" >실패</option>
+            <option value="STATUS_UNDEFINED" class="taskStatus" status="STATUS_UNDEFINED" >기타</option>
+          </select>
+        </td>
+
+        <td valign="top" nowrap>
+          <label>진행율(%)</label><br>
+          <input type="text" name="progress" id="progress" size="7" class="formElements validated percentile center" autocomplete="off" maxlength="255" value="" oldvalue="1" entrytype="PERCENTILE">
+        </td>
+      </tr>
+
+          </tr>
+          <tr>
+            <td colspan="4">
+              <label for="description">상세</label><br>
+              <textarea rows="3" cols="30" id="description" name="description" class="formElements" style="width:100%"></textarea>
+            </td>
+          </tr>
+        </table>
+
+    <h2>자원배치현황</h2>
+  <table  cellspacing="1" cellpadding="0" width="100%" id="assigsTable">
+    <tbody class="assigsTable">
+    <tr>
+      <th style="width:100px;">자원명</th>
+      <th style="width:70px;">역할</th>
+      <th style="width:30px;">근무시간</th>
+      <th ng-if="!isInspector" style="width:30px;" class="deleteTrash" id="addAssig"><span class="teamworkIcon" style="cursor: pointer">+</span></th>
+    </tr>
+    </tbody>
+  </table>
+
+  <div style="text-align: right; padding-top: 20px" ng-if="!isInspector">
+    <span id="saveButton" class="button" onClick="$(this).trigger('saveFullEditor.gantt'); setTimeout(function(){ $('#saveAlert-modal').removeClass('close'); }, 500);setTimeout(function(){ $('#saveAlert-modal').addClass('close'); }, 5000);">등록</span>
+  </div>
+
+  </div>
+--></div>
+
+
+
+<div class="__template__" type="ASSIGNMENT_ROW"><!--
+  <tr taskId="(#=obj.task.id#)" assId="(#=obj.assig.id#)" class="assigEditRow" >
+    <td ><select name="resourceId"  class="formElements" (#=obj.assig.id.indexOf("tmp_")==0?"":"disabled"#) ></select></td>
+    <td ><select type="select" name="roleId"  class="formElements"></select></td>
+    <td ><input type="text" name="effort" value="(#=getMillisInHoursMinutes(obj.assig.effort)#)" size="5" class="formElements center"></td>
+    <td align="center" class="deleteTrash"><span class="teamworkIcon delAssig del" style="cursor: pointer">d</span></td>
+  </tr>
+--></div>
+
+
+
+<div class="__template__" type="RESOURCE_EDITOR"><!--
+  <div class="resourceEditor" style="padding: 5px;">
+
+    <h2>인원등록</h2>
+    <table  cellspacing="1" cellpadding="0" width="100%" id="resourcesTable">
+      <tbody style="height: 300px;
+    display: block;
+    width: 100%;
+    overflow-y: auto;">
+      <tr>
+        <th style="width:300px;">이름</th>
+        <th ng-if="!isInspector" style="width:30px;" id="addResource" class="resbutton"><span class="teamworkIcon" style="cursor: pointer">+</span></th>
+      </tr>
+      </tbody>
+    </table>
+
+    <div style="text-align: right; padding-top: 20px" ng-show="!isInspector"><button id="resSaveButton" onclick="$('#saveAlert-modal').removeClass('close');setTimeout(function(){ $('#saveAlert-modal').addClass('close'); }, 5000);" class="button resbutton big">등록</button></div>
+  </div>
+--></div>
+
+
+<div class="__template__" type="RESOURCE_ROW"><!--
+  <tr resId="(#=obj.id#)" class="resRow" >
+      <td ><input type="text" autocomplete="off" placeholder="자원명" onfocus="if(isEditing == 1){if($(this).val() == '자원명'){$(this).val('')};$(this).prop('placeholder', '')}" onblur="$(this).prop('placeholder', '자원명')" name="name" value="(#=obj.name#)" style="width:100%;" class="formElements"></td>
+    <td align="center" class="deleteTrash"><span class="teamworkIcon delRes del" style="cursor: pointer">d</span></td>
+  </tr>
+--></div>
+
+
+</div>
+
+</div>
+</div>
+</div>
+</div>
+
+

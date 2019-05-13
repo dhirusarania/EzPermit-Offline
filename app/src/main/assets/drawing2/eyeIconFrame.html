@@ -1,0 +1,1287 @@
+<html><head>
+	<meta charset="utf-8">
+	<title>t3est</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2" />
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+</script>
+<style type="text/css">
+html{
+    overflow: hidden;
+}
+.categories{
+    position: absolute;
+    width: 100%;
+    z-index: 120;
+    box-sizing: border-box;
+}
+.custom-file-input, ..custom-file-input-video {
+    color: transparent;
+    outline: none;
+    height: 22px;
+    line-height: 22px;
+    display: none
+}
+.custom-file-input::-webkit-file-upload-button , .custom-file-input-video::-webkit-file-upload-button {
+    visibility: hidden;
+}
+</style>
+<body>
+
+
+    <div style="flex-basis: 70%;position: relative;height:35px">
+     <div class="categories" id="categories-2" data-id="2">
+      <div style="display:flex">
+       <div class="no-select" style="flex-grow:1;width:178px">
+            <input type="file" accept="image/*" id="gallery-photo-add1-2" class="custom-file-input gallery" title=" " data-id="-1" style="width: 100%;display:none">
+
+            <label style="position: absolute;top: 0;width:28px;text-align:center" class="gallery-for" for="gallery-photo-add1-2">
+                <img title="사진첨부" alt="사진첨부" class="inline-image" style="width: initial;" height="25" src="file:///android_asset/drawing2/icons/photoupload.svg?v=1">
+            </label>
+        </div>
+<!--    <div class="no-select" style="flex-grow:1;width:178px">
+            <input type="file" accept="image/*" capture="camera" id="gallery-photo-add-11" class="custom-file-input camera" title=" " data-id="-1" style="width: 100%">
+            <label style="position: absolute;top: 0;width:28px;text-align:center" for="gallery-photo-add-12" class="camera-for">
+             <img title="사진첨부" alt="사진첨부" class="inline-image" style="width: initial;" height="25" src="/assets/drawing2/icons/cameraIcon.svg?v=1">
+         </label>
+        </div> -->
+
+    
+    <div class="no-select" style="flex-grow:1;width:178px">
+            <input type="file" accept="video/*" id="gallery-photo-add-111" class="custom-file-input-video camera" title=" " data-id="-1" style="width: 100%;display:none">
+            <label style="position: absolute;top: 0;width:28px;text-align:center" for="gallery-photo-add-111" class="camera-for">
+             <img title="사진첨부" alt="사진첨부" class="inline-image" style="width: initial;" height="25" src="file:///android_asset/drawing2/icons/videorecord.svg?v=1">
+         </label>
+        </div>
+</div>
+</div>
+</div>
+
+
+
+
+
+
+</body>
+</html>
+
+<script type="text/javascript">
+
+
+function getParamValue(paramName)
+{
+    var url = window.location.search.substring(1); //get rid of "?" in querystring
+    var qArray = url.split('&'); //get key-value pairs
+    for (var i = 0; i < qArray.length; i++) 
+    {
+        var pArr = qArray[i].split('='); //split key and value
+        if (pArr[0] == paramName) 
+            return pArr[1]; //return value
+    }
+}
+
+
+var param1 = getParamValue('param1');
+
+
+$(".custom-file-input").attr('data-id' , param1)
+$(".custom-file-input-video").attr('data-id' , param1)
+$(".categories").attr('data-id' , param1)
+$(".categories").attr('id' , "categories-" + param1)
+
+$(".gallery").attr('id' , "gallery-photo-add1-" + param1)
+$(".gallery-for").attr('for' , "gallery-photo-add1-" + param1)
+
+$(".camera").attr('id' , "gallery-photo-add-" + param1)
+$(".camera-for").attr('for' , "gallery-photo-add-" + param1)
+
+
+
+// Modified from https://stackoverflow.com/a/32490603, cc by-sa 3.0
+// -2 = not jpeg, -1 = no data, 1..8 = orientations
+function getExifOrientation(file, callback) {
+    // Suggestion from http://code.flickr.net/2012/06/01/parsing-exif-client-side-using-javascript-2/:
+    if (file.slice) {
+        file = file.slice(0, 131072);
+    } else if (file.webkitSlice) {
+        file = file.webkitSlice(0, 131072);
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var view = new DataView(e.target.result);
+        if (view.getUint16(0, false) != 0xFFD8) {
+            callback(-2);
+            return;
+        }
+        var length = view.byteLength, offset = 2;
+        while (offset < length) {
+            var marker = view.getUint16(offset, false);
+            offset += 2;
+            if (marker == 0xFFE1) {
+                if (view.getUint32(offset += 2, false) != 0x45786966) {
+                    callback(-1);
+                    return;
+                }
+                var little = view.getUint16(offset += 6, false) == 0x4949;
+                offset += view.getUint32(offset + 4, little);
+                var tags = view.getUint16(offset, little);
+                offset += 2;
+                for (var i = 0; i < tags; i++)
+                    if (view.getUint16(offset + (i * 12), little) == 0x0112) {
+                        callback(view.getUint16(offset + (i * 12) + 8, little));
+                        return;
+                    }
+                }
+                else if ((marker & 0xFF00) != 0xFF00) break;
+                else offset += view.getUint16(offset, false);
+            }
+            callback(-1);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+// Derived from https://stackoverflow.com/a/40867559, cc by-sa
+function imgToCanvasWithOrientation(img, rawWidth, rawHeight, orientation) {
+    var canvas = document.createElement('canvas');
+    if (orientation > 4) {
+        canvas.width = rawHeight;
+        canvas.height = rawWidth;
+    } else {
+        canvas.width = rawWidth;
+        canvas.height = rawHeight;
+    }
+
+    if (orientation > 1) {
+        console.log("EXIF orientation = " + orientation + ", rotating picture");
+    }
+
+    var ctx = canvas.getContext('2d');
+    switch (orientation) {
+        case 2: ctx.transform(-1, 0, 0, 1, rawWidth, 0); break;
+        case 3: ctx.transform(-1, 0, 0, -1, rawWidth, rawHeight); break;
+        case 4: ctx.transform(1, 0, 0, -1, 0, rawHeight); break;
+        case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
+        case 6: ctx.transform(0, 1, -1, 0, rawHeight, 0); break;
+        case 7: ctx.transform(0, -1, -1, 0, rawHeight, rawWidth); break;
+        case 8: ctx.transform(0, -1, 1, 0, 0, rawWidth); break;
+    }
+    ctx.drawImage(img, 0, 0, rawWidth, rawHeight);
+    return canvas;
+}
+
+
+
+
+function reduceFileSize(file, acceptFileSize, maxWidth, maxHeight, quality, callback) {
+    if (file.size <= acceptFileSize) {
+        callback(file);
+        return;
+    }
+    var img = new Image();
+    img.onerror = function() {
+        URL.revokeObjectURL(this.src);
+        callback(file);
+    };
+    img.onload = function() {
+        URL.revokeObjectURL(this.src);
+        getExifOrientation(file, function(orientation) {
+            var w = img.width, h = img.height;
+            var scale = (orientation > 4 ?
+                Math.min(maxHeight / w, maxWidth / h, 1) :
+                Math.min(maxWidth / w, maxHeight / h, 1));
+            h = Math.round(h * scale);
+            w = Math.round(w * scale);
+
+            var canvas = imgToCanvasWithOrientation(img, w, h, orientation);
+            canvas.toBlob(function(blob) {
+                console.log("Resized image to " + w + "x" + h + ", " + (blob.size >> 10) + "kB");
+                callback(blob);
+            }, 'image/jpeg', quality);
+        });
+    };
+    img.src = URL.createObjectURL(file);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+$(document).on('change', '.custom-file-input', function() {
+
+
+
+    var fileExtension = ['jpg', 'png', 'jpeg'];
+    if ($.inArray($(this).val().split('.').pop().toLowerCase(), fileExtension) == -1) {
+
+    }else{
+
+
+        console.log("change")
+        console.log( $(this))
+
+
+        imagesPreview(this, $(this).attr("data-id") );
+
+
+    }
+});
+
+
+/**
+ * Convert a base64 string in a Blob according to the data and contentType.
+ * 
+ * @param b64Data {String} Pure base64 string without contentType
+ * @param contentType {String} the content type of the file i.e (image/jpeg - image/png - text/plain)
+ * @param sliceSize {Int} SliceSize to process the byteCharacters
+ * @see http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
+ * @return Blob
+ */
+function b64toBlob(b64Data, contentType, sliceSize) {
+        contentType = contentType || '';
+        sliceSize = sliceSize || 512;
+
+        var byteCharacters = atob(b64Data);
+        var byteArrays = [];
+
+        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            var slice = byteCharacters.slice(offset, offset + sliceSize);
+
+            var byteNumbers = new Array(slice.length);
+            for (var i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+
+            var byteArray = new Uint8Array(byteNumbers);
+
+            byteArrays.push(byteArray);
+        }
+
+      var blob = new Blob(byteArrays, {type: contentType});
+      return blob;
+}
+
+
+
+$(document).on('change', '.custom-file-input-video', function(event) {
+
+
+	var ImageURL
+// Split the base64 string in data and contentType
+var block
+// Get the content type of the image
+var contentType
+// get the real base64 content of the file
+var realData
+
+// Convert it to a blob to upload
+var blob
+
+
+
+var imageCount
+
+        var timestamp = Date.now();
+
+        console.log("change")
+        console.log($(this).attr("data-id"))
+
+
+imageCount = $(this).attr("data-id")
+
+ console.log($(this).val())
+
+        alert($(this).val().split('.').pop().toLowerCase())
+
+    var fileExtension = ['mp4' , 'avi'];
+    if ($.inArray($(this).val().split('.').pop().toLowerCase(), fileExtension) == -1) {
+
+        console.log("extension")
+        console.log($(this).val().split('.').pop().toLowerCase())
+
+    }else{
+
+        console.log($(this).val())
+	  var file = event.target.files[0];
+  var fileReader = new FileReader();
+  if (file.type.match('image')) {
+    fileReader.onload = function() {
+      var img = document.createElement('img');
+      img.src = fileReader.result;
+      document.getElementsByTagName('div')[0].appendChild(img);
+    };
+    fileReader.readAsDataURL(file);
+  } else {
+    fileReader.onload = function() {
+      var blob = new Blob([fileReader.result], {type: file.type});
+      var url = URL.createObjectURL(blob);
+      var video = document.createElement('video');
+      var timeupdate = function() {
+        if (snapImage()) {
+          video.removeEventListener('timeupdate', timeupdate);
+          video.pause();
+        }
+      };
+      video.addEventListener('loadeddata', function() {
+        if (snapImage()) {
+          video.removeEventListener('timeupdate', timeupdate);
+        }
+      });
+      var snapImage = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        var image = canvas.toDataURL();
+        var success = image.length > 100000;
+        if (success) {
+          var img = document.createElement('img');
+          img.src = image;
+          // document.getElementById('')[0].appendChild(img);
+
+          ImageURL = image
+// Split the base64 string in data and contentType
+block = ImageURL.split(";");
+// Get the content type of the image
+contentType = block[0].split(":")[1];// In this case "image/gif"
+// get the real base64 content of the file
+realData = block[1].split(",")[1];// In this case "R0lGODlhPQBEAPeoAJosM...."
+
+// Convert it to a blob to upload
+blob = b64toBlob(realData, contentType);
+
+console.log(blob)
+
+
+
+
+        // videoUpload(this, $(this).attr("data-id") );
+
+var file_data = $('.custom-file-input-video').prop('files')[0];   
+    var form_data = new FormData();                  
+    form_data.append('file', file_data);
+    form_data.append("image", blob);
+    form_data.append('activeLayer', parent.activeLayer);
+    form_data.append('filename',  parent.getFile.url);
+    form_data.append('imageCount', imageCount);
+    alert(form_data);      
+    console.log('blob')  
+
+
+response = {"files":{"file":{"name":"nayanika_30_53521501_167741214213337_6883212860962516102_n.mp4","type":"video\/mp4","tmp_name":"\/tmp\/php7smDcW","error":0,"size":62016},"image":{"name":"blob","type":"image\/png","tmp_name":"\/tmp\/phpGnwe4j","error":0,"size":290351}},"filenames44":"N04AG-ER3113-17_Rev1","filename00":"https:\/\/www.easypermit.net\/storage\/29\/Common\/39\/drw(progress)\/N04AG-ER3113-17_Rev1.pdf","postdata":"https:\/\/www.easypermit.net\/storage\/29\/Common\/39\/drw(progress)\/N04AG-ER3113-17_Rev1.pdf","c":"image\/png","filenamess2s":"https:\/\/www.easypermit.net\/storage\/29\/Common\/39\/drw(progress)\/","act":"293811557039375130","filenamess3s":"https:\/\/www.easypermit.net\/storage\/29\/Common\/39\/drw(progress)","text":"https:\/\/www.easypermit.net\/storage\/29\/Common\/39\/drw(progress)N04AG-ER3113-17_Rev1\/293811557039375130\/1","text2":"https:\/\/www.easypermit.net\/storage\/29\/Common\/39\/drw(progress)N04AG-ER3113-17_Rev1\/293811557039375130\/1","filenamesss":"N04AG-ER3113-17_Rev1","filenames":"N04AG-ER3113-17_Rev1","extension":"png","makedir":"https:\/\/www.easypermit.net\/storage\/29\/Common\/39\/drw(progress)\/N04AG-ER3113-17_Rev1\/293811557039375130\/1","tarhg":"\/var\/www\/html\/storage\/29\/Common\/39\/drw(progress)\/N04AG-ER3113-17_Rev1\/293811557039375130\/1\/N04AG-ER3113-17_Rev1().png","userURL":"https:\/\/www.easypermit.net\/storage\/29\/Common\/39\/drw(progress)\/N04AG-ER3113-17_Rev1\/293811557039375130\/1\/nayanika_30_53521501_167741214213337_6883212860962516102_n().mp4","ssss":"\/var\/www\/html\/storage\/29\/Common\/39\/N04AG-ER3113-17_Rev1.png","filname name":{"file":{"name":"nayanika_30_53521501_167741214213337_6883212860962516102_n.mp4","type":"video\/mp4","tmp_name":"\/tmp\/php7smDcW","error":0,"size":62016},"image":{"name":"N04AG-ER3113-17_Rev1.png","type":"image\/png","tmp_name":"\/tmp\/phpGnwe4j","error":0,"size":290351}},"thumbnailURL":"file:\/\/\/android_asset\/drawing2\/images\/image.jpg"}
+
+    // $.ajax({
+    //     url: '/assets/drawing2/videoUploader.php', // point to server-side PHP script 
+    //     dataType: 'text',  // what to expect back from the PHP script, if anything
+    //     cache: false,
+    //     contentType: false,
+    //     processData: false,
+    //     data: form_data,                         
+    //     type: 'post',
+    //     success: function(response){
+
+
+
+
+
+            parent._imageCount++
+
+            var d1 = window.parent.document.getElementById('gallery-'+ imageCount + parent.activeLayer);
+
+            console.log('this is arrea')
+            console.log(d1)
+
+
+            d1.insertAdjacentHTML('beforeend', '<div><img data-tag="'+ parent._imageCount + '" data-parent="'+ imageCount +'" class="videoOpen" id="image-' +  parent.activeLayer + '-' + timestamp + '" src="' + ImageURL +'"></div>');
+
+
+
+            console.log("imageCount" + imageCount + parent.activeLayer)
+window.parent.$('#gallery-'+ imageCount + parent.activeLayer + '.slick-initialized').slick("unslick");
+window.parent.$('#gallery-li-'+ imageCount + parent.activeLayer).removeClass('hide')
+
+window.parent.$('#gallery-'+ imageCount + parent.activeLayer).slick({
+    infinite: true,
+    slidesToShow: 3,
+    slidesToScroll: 3,
+    dots: false,
+    prevArrow: false,
+    nextArrow: false
+})
+
+
+
+
+
+$(".videoIcon").remove();
+
+var slides = window.parent.document.getElementsByClassName("videoOpen");
+for(var i = 0; i < slides.length; i++)
+{
+   slides.item(i).insertAdjacentHTML('afterend', '<div class="videoIcon"><img src="file:///android_asset/drawing2/icons/play.svg"></div>');
+}
+
+
+
+                                                    imageO = { src: response.thumbnailURL, w: 50, type: 'video', url: response.userURL,  h: 50, id: "image-" + parent.activeLayer + '-' + timestamp   }
+
+                                                    console.log(imageO)
+
+                                                    parent.buffer.push(imageO)
+
+                                                    console.log(parent.buffer)
+                                                    console.log(imageCount)
+
+
+                                                    console.log("ImageCountL " + imageCount)
+
+
+                                                    // if(parent.allitems[parent.activeLayer] == undefined){
+                                                    //     console.log("aaaa")
+                                                    //     parent.allitems[parent.activeLayer] = []
+                                                    // }
+
+                                                    // if(parent.allitems[parent.activeLayer][imageCount] == undefined){
+                                                    //     console.log("aaaa")
+                                                    //     parent.allitems[parent.activeLayer][imageCount] = []
+                                                    // }
+
+
+
+
+                                                    // parent.allitems[parent.activeLayer][imageCount].reverse();
+
+
+                                                    // parent.allitems[parent.activeLayer][imageCount].push(imageO)
+
+
+                                                    // parent.allitems[parent.activeLayer][imageCount].reverse();
+
+
+                                                    console.log(parent.allitems)
+
+
+
+
+                                                        objs = parent.canvas.getObjects().map(function(selected_object) {
+
+																        if(selected_object.id == 'imageObject' &&  selected_object.layerCount == imageCount){
+
+																            src = "https://easypermit.net/assets/drawing2/icons/eyeGreen.svg"
+
+																            selected_object.setSrc(src, function () {
+																                parent.canvas.renderAll();
+
+																            });
+																        }
+																    }); 
+
+
+
+
+                                                       parent.imageAction = 1
+
+                                                     // window.parent.$("#layeraction-" + parent.activeLayer + " .saveLayer").click()
+
+
+
+
+        // }
+     // });
+
+
+
+
+
+
+
+
+
+
+
+
+
+          URL.revokeObjectURL(url);
+        }
+        return success;
+      };
+      video.addEventListener('timeupdate', timeupdate);
+      video.preload = 'metadata';
+      video.src = url;
+      // Load video in Safari / IE11
+      video.muted = true;
+      video.playsInline = true;
+      video.play();
+    };
+    fileReader.readAsArrayBuffer(file);
+  }
+
+  }
+
+
+});
+
+
+
+    function doIt(base64, imageCount, imagewidth, imageheight, input, timestamp) {
+        rotate64(base64)
+        .then(function(imageData) {
+            imageData = "data:image/jpeg;base64," + imageData
+
+            // console.log(myFormData)
+            console.log("samsugn")
+            console.log(parent._imageCount)
+            console.log(imageCount)
+            parent._imageCount++
+
+
+
+
+            reduceFileSize(input.files[0], 500*1024, 1000, Infinity, 0.9, blob => {
+                let body = new FormData();
+                body.set('file', blob,  blob.name || "file.jpg");
+                body.set('filename', parent.getFile.url);
+                body.set('activeLayer', parent.activeLayer);
+                body.set('imageCount', imageCount);
+                console.log(blob)
+                console.log(body)
+                // fetch('/assets/drawing2/textImageServer.php', {method: 'POST', body})
+                // .then((res) => { return res.text();})
+                // .then((data) => { 
+                   
+
+                              data = {"filenames44":"cats_of_world_51576069_2190445897679974_1624623163701603981_n","filename00":"\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n.jpg","postdata":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n.jpg","c":"image\/jpeg","filenamess2s":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)\/","filenamess3s":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)","filenamesss":"cats_of_world_34490424_466714877105081_2706313812956413952_n","filenames":"cats_of_world_34490424_466714877105081_2706313812956413952_n","extension":"jpg","success":"upload was successful","ssss":{"FileName":"phphrZGp5","FileDateTime":1556626799,"FileSize":200687,"FileType":2,"MimeType":"image\/jpeg","SectionsFound":"","COMPUTED":{"html":"width=\"1080\" height=\"1318\"","Height":1318,"Width":1080,"IsColor":1}},"act":"undefined3511555105048664","text":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1","text2":"\/var\/www\/html\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1","taeget":"\/var\/www\/html\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1\/cats_of_world_51576069_2190445897679974_1624623163701603981_n.jpg","targetPath":"\/var\/www\/html\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1\/cats_of_world_51576069_2190445897679974_1624623163701603981_n.jpg","sourcePath":"\/tmp\/phphrZGp5","status":"success","filename":"cats_of_world_51576069_2190445897679974_1624623163701603981_n.jpg","path":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1\/cats_of_world_51576069_2190445897679974_1624623163701603981_n.jpg"}
+
+                    if(data.status == "success"){
+
+                        imageO = { src: data.path, h: imagewidth, w: imageheight, id: "image-" + parent.activeLayer + '-' + timestamp   }
+
+                        console.log(imageO)
+
+                        parent.buffer.push(imageO)
+
+                        console.log(parent.buffer)
+                        console.log(imageCount)
+
+                            // buffer1[imageCount] = buffer
+
+                        //  if (!Array.isArray(allitems) || !allitems.length) {
+
+                            //      allitems[activeLayer] = []
+
+                            //      console.log("asss")
+
+                            //      allitems[activeLayer] = imageO
+                            // }
+
+                            // imageCount = imageCountArray[activeLayer]
+
+                            // console.log("ImageCountL " + imageCount)
+
+
+                            // if(parent.allitems[parent.activeLayer] == undefined){
+                            //     console.log("aaaa")
+                            //     parent.allitems[parent.activeLayer] = []
+                            // }
+
+                            // if(parent.allitems[parent.activeLayer][imageCount] == undefined){
+                            //     console.log("aaaa")
+                            //     parent.allitems[parent.activeLayer][imageCount] = []
+                            // }
+
+
+
+            
+
+                            // parent.allitems[parent.activeLayer][imageCount].reverse();
+
+                            
+                            // parent.allitems[parent.activeLayer][imageCount].push(imageO)
+                            
+
+                            // parent.allitems[parent.activeLayer][imageCount].reverse();
+
+
+
+
+                            // console.log(parent.allitems)
+
+                            imageO.length = 0
+
+
+
+                            parent.imageAction = 1
+
+                            // window.parent.$("#layeraction-" + parent.activeLayer + " .saveLayer").click()
+
+
+                        }else if(data.status == "error" && data.type == "not jpg"){
+
+                             window.parent.$('#image-' +  parent.activeLayer + '-' + timestamp).unwrap()
+                             window.parent.$('#image-' +  parent.activeLayer + '-' + timestamp).parent().remove()
+                             window.parent.$('.gallery').slick("unslick")
+
+                             window.parent.$('.gallery').slick({
+                                infinite: true,
+                                slidesToShow: 3,
+                                slidesToScroll: 3,
+                                dots: false,
+                                prevArrow: false,
+                                nextArrow: false
+                            })
+
+
+
+
+$(".videoIcon").remove();
+
+var slides = window.parent.document.getElementsByClassName("videoOpen");
+for(var i = 0; i < slides.length; i++)
+{
+   slides.item(i).insertAdjacentHTML('afterend', '<div class="videoIcon"><img src="assets/drawing2/icons/play.svg"></div>');
+}
+
+
+                             window.parent.$("#jpgpngonly-modal").removeClass('close')
+
+
+                        }else if(data.status == "error"){
+
+                             window.parent.$('#image-' +  parent.activeLayer + '-' + timestamp).unwrap()
+                             window.parent.$('#image-' +  parent.activeLayer + '-' + timestamp).parent().remove()
+
+                             window.parent.$('.gallery').slick("unslick")
+
+                             window.parent.$('.gallery').slick({
+                                infinite: true,
+                                slidesToShow: 3,
+                                slidesToScroll: 3,
+                                dots: false,
+                                prevArrow: false,
+                                nextArrow: false
+                            })
+
+
+
+
+$(".videoIcon").remove();
+
+var slides = window.parent.document.getElementsByClassName("videoOpen");
+for(var i = 0; i < slides.length; i++)
+{
+   slides.item(i).insertAdjacentHTML('afterend', '<div class="videoIcon"><img src="assets/drawing2/icons/play.svg"></div>');
+}
+
+                             window.parent.$("#uploadfailed-modal").removeClass('close')
+
+                        }
+
+                         window.parent.$('.inline-image').show()
+                         window.parent.$('.loaderSmall').remove()
+
+                    // });
+});
+
+
+
+var d1 =  window.parent.document.getElementById('gallery-'+ imageCount + parent.activeLayer);
+
+console.log('this is arrea')
+console.log(d1)
+
+
+d1.insertAdjacentHTML('beforeend', '<div><img data-tag="'+ parent._imageCount + '" data-parent="'+ imageCount +'" class="sliderImages" id="image-' +  parent.activeLayer + '-' + timestamp + '" src="' + imageData +'"></div>');
+
+
+
+
+
+
+parent.slideIndex++
+
+console.log("imageCount2 " + imageCount)
+ window.parent.$('#gallery-'+ imageCount + parent.activeLayer + '.slick-initialized').slick("unslick");
+ window.parent.$('#gallery-li-'+ imageCount + parent.activeLayer).removeClass('hide')
+
+ window.parent.$('#gallery-'+ imageCount + parent.activeLayer).slick({
+    infinite: true,
+    slidesToShow: 3,
+    slidesToScroll: 3,
+    dots: false,
+    prevArrow: false,
+    nextArrow: false
+})
+
+
+
+
+$(".videoIcon").remove();
+
+var slides = window.parent.document.getElementsByClassName("videoOpen");
+for(var i = 0; i < slides.length; i++)
+{
+   slides.item(i).insertAdjacentHTML('afterend', '<div class="videoIcon"><img src="assets/drawing2/icons/play.svg"></div>');
+}
+
+ window.parent.$('#gallery-'+ imageCount + parent.activeLayer).removeClass('hide')
+
+
+ window.parent.$(".slickButton").removeClass('hide')
+
+ window.parent.$(".loader").hide().fadeOut('slow');
+
+
+
+
+})
+}
+
+
+
+
+var imagesPreview = function(input, imageCount) {
+
+    console.log(imageCount)
+
+    var $img
+
+    if (input.files) {
+        var filesAmount = input.files.length;
+
+        var counter = 0
+
+        console.log(input.files)
+
+        total_byte = input.files["0"].size
+
+
+        // jQuery.ajax({
+        //     url: '/assets/views/phppages/allProjectController.php?getStorage1=getStorage1&upload_size=' + total_byte,
+
+        //     async: false,
+        //     success: function (result) {
+
+        //         result = JSON.parse(result)
+        //         console.log(result)
+        //         if (result.result == "full") {
+        //             console.log("failed full")
+
+        //             window.parent.$("#fullStorageOnPhotoUpload-modal").removeClass("close")
+
+
+        //         } else if(result.result == "success") {
+        //             console.log("success")
+
+
+                    for (i = 0; i < filesAmount; i++) {
+                        var reader = new FileReader();
+                        var file;
+                        staticNumb = 0;
+
+                        counter++;
+
+
+
+
+
+
+
+
+                        reader.onload = function(event) {
+
+
+                            window.parent.$(".loader").css('background', 'rgba(255,255,255,0.7)');
+                            window.parent.$(".loader").show().fadeIn('slow');
+
+                            staticNumb++
+                            if( staticNumb == 1 ){
+
+                                console.log(event)
+
+                                var MAX_HEIGHT
+                                var imageData
+
+                                var timestamp = Date.now();
+
+
+
+
+
+                                var image = new Image();
+                                image.onload = function(){
+
+
+
+
+                                    var temp_height = image.height
+                                    var temp_width = image.width
+
+
+
+
+
+
+
+
+                                    var canvas = parent.document.createElement('canvas');
+                                    canvas.id = 'imageCanvas'
+                                    parent.document.getElementById("body").appendChild(canvas);
+
+                                    MAX_HEIGHT = 50
+
+
+                                    image.width *= MAX_HEIGHT / image.height;
+                                    image.height = MAX_HEIGHT;
+
+
+                                    var ctx = canvas.getContext("2d");
+
+
+                                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+
+                                    canvas.width = image.width;
+                                    canvas.height = image.height;
+                                    ctx.drawImage(image, 0, 0, image.width, image.height);
+                                    imageData = canvas.toDataURL("image/jpeg");
+
+
+                                    // alert(_correction)
+
+
+
+                                     if(parent._correction == 6){
+
+                                        canvas.remove()
+
+
+                                        doIt(imageData, imageCount, temp_width, temp_height ,input,timestamp)
+
+                                    }
+
+                                    else{
+
+
+                                        reduceFileSize(input.files[0], 500*1024, 2000, Infinity, 0.5, blob => {
+                                            let body = new FormData();
+                                            body.set('file', blob,  blob.name || "file.jpg");
+                                            body.set('filename', parent.getFile.url);
+                                            body.set('activeLayer', parent.activeLayer);
+                                            body.set('imageCount', imageCount);
+                                            console.log(blob)
+                                            console.log(body)
+                                            // fetch('/assets/drawing2/textImageServer.php', {method: 'POST', body})
+                                            // .then((res) => { return res.text();})
+                                            // .then((data) => { 
+
+
+                                                data = {"filenames44":"cats_of_world_51576069_2190445897679974_1624623163701603981_n","filename00":"\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n.jpg","postdata":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n.jpg","c":"image\/jpeg","filenamess2s":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)\/","filenamess3s":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)","filenamesss":"cats_of_world_34490424_466714877105081_2706313812956413952_n","filenames":"cats_of_world_34490424_466714877105081_2706313812956413952_n","extension":"jpg","success":"upload was successful","ssss":{"FileName":"phphrZGp5","FileDateTime":1556626799,"FileSize":200687,"FileType":2,"MimeType":"image\/jpeg","SectionsFound":"","COMPUTED":{"html":"width=\"1080\" height=\"1318\"","Height":1318,"Width":1080,"IsColor":1}},"act":"undefined3511555105048664","text":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1","text2":"\/var\/www\/html\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1","taeget":"\/var\/www\/html\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1\/cats_of_world_51576069_2190445897679974_1624623163701603981_n.jpg","targetPath":"\/var\/www\/html\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1\/cats_of_world_51576069_2190445897679974_1624623163701603981_n.jpg","sourcePath":"\/tmp\/phphrZGp5","status":"success","filename":"cats_of_world_51576069_2190445897679974_1624623163701603981_n.jpg","path":"http:\/\/www.easypermit.net\/storage\/52\/Common\/151\/drw(progress)\/cats_of_world_34490424_466714877105081_2706313812956413952_n\/undefined3511555105048664\/1\/cats_of_world_51576069_2190445897679974_1624623163701603981_n.jpg"}
+
+                                                console.log(data)  
+                                                // var data = JSON.parse(data)
+                                                console.log(data)
+                                                // console.log(body)
+
+                                                if(data.status == "success"){
+
+
+
+
+
+
+                                                    imageO = { src: data.path, w: temp_width, type: 'image',  h: temp_height, id: "image-" + parent.activeLayer + '-' + timestamp   }
+
+                                                    console.log(imageO)
+
+                                                    parent.buffer.push(imageO)
+
+                                                    console.log(parent.buffer)
+                                                    console.log(imageCount)
+
+
+                                                    console.log("ImageCountL " + imageCount)
+
+
+                                                    // if(parent.allitems[parent.activeLayer] == undefined){
+                                                    //     console.log("aaaa")
+                                                    //     parent.allitems[parent.activeLayer] = []
+                                                    // }
+
+                                                    // if(parent.allitems[parent.activeLayer][imageCount] == undefined){
+                                                    //     console.log("aaaa")
+                                                    //     parent.allitems[parent.activeLayer][imageCount] = []
+                                                    // }
+
+
+
+
+                                                    // parent.allitems[parent.activeLayer][imageCount].reverse();
+
+
+                                                    // parent.allitems[parent.activeLayer][imageCount].push(imageO)
+
+
+                                                    // parent.allitems[parent.activeLayer][imageCount].reverse();
+
+
+                                                    // console.log(parent.allitems)
+
+                                                    imageO.length = 0
+
+                                                    parent.imageAction = 1
+
+                                                     // window.parent.$("#layeraction-" + parent.activeLayer + " .saveLayer").click()
+
+                                                }else if(data.status == "error" && data.type == "not jpg"){
+
+                                                     window.parent.$('#image-' +  parent.activeLayer + '-' + timestamp).unwrap()
+                                                     window.parent.$('#image-' +  parent.activeLayer + '-' + timestamp).parent().remove()
+
+                                                     window.parent.$('.gallery').slick("unslick")
+
+                                                     window.parent.$('.gallery').slick({
+                                                        infinite: true,
+                                                        slidesToShow: 3,
+                                                        slidesToScroll: 3,
+                                                        dots: false,
+                                                        prevArrow: false,
+                                                        nextArrow: false
+                                                    })
+
+
+
+$(".videoIcon").remove();
+
+var slides = window.parent.document.getElementsByClassName("videoOpen");
+for(var i = 0; i < slides.length; i++)
+{
+   slides.item(i).insertAdjacentHTML('afterend', '<div class="videoIcon"><img src="assets/drawing2/icons/play.svg"></div>');
+}
+
+
+                                                     window.parent.$("#jpgpngonly-modal").removeClass('close')
+
+
+                                                }else if(data.status == "error"){
+
+                                                     window.parent.$('#image-' +  parent.activeLayer + '-' + timestamp).unwrap()
+                                                     window.parent.$('#image-' +  parent.activeLayer + '-' + timestamp).parent().remove()
+
+                                                     window.parent.$('.gallery').slick("unslick")
+
+                                                     window.parent.$('.gallery').slick({
+                                                        infinite: true,
+                                                        slidesToShow: 3,
+                                                        slidesToScroll: 3,
+                                                        dots: false,
+                                                        prevArrow: false,
+                                                        nextArrow: false
+                                                    })
+
+
+
+$(".videoIcon").remove();
+
+var slides = window.parent.document.getElementsByClassName("videoOpen");
+for(var i = 0; i < slides.length; i++)
+{
+   slides.item(i).insertAdjacentHTML('afterend', '<div class="videoIcon"><img src="assets/drawing2/icons/play.svg"></div>');
+}
+
+
+                                                     window.parent.$("#uploadfailed-modal").removeClass('close')
+
+                                                }
+
+
+                                                 window.parent.$('.loaderSmall').remove()
+                                                 window.parent.$('.inline-image').show()
+
+                                            // });
+});
+
+
+
+
+
+parent._imageCount++
+
+var d1 = window.parent.document.getElementById('gallery-'+ imageCount + parent.activeLayer);
+
+console.log('this is arrea')
+console.log(d1)
+
+d1.insertAdjacentHTML('beforeend', '<div><img data-tag="'+ parent._imageCount + '" data-parent="'+ imageCount +'" class="sliderImages" id="image-' +  parent.activeLayer + '-' + timestamp + '" src="' + imageData +'"></div>');
+
+
+
+var buffer1 = {}
+
+
+
+
+console.log("sdsdssssssssssssssssssssssssssssssss")
+console.log(imageCount)
+
+
+
+
+
+
+$img = $("#image-" + parent.activeLayer)
+
+
+
+switch(parent._correction) {
+    case 2:
+    $img.addClass('flip'); break;
+    case 3:
+    $img.addClass('rotate-180'); break;
+    case 4:
+    $img.addClass('flip-and-rotate-180'); break;
+    case 5:
+    $img.addClass('flip-and-rotate-270'); break;
+    case 6:
+    $img.addClass('rotate-90'); break;
+    case 7:
+    $img.addClass('flip-and-rotate-90'); break;
+    case 8:
+    $img.addClass('rotate-270'); break;
+}
+
+
+parent.slideIndex++
+
+console.log("imageCount" + imageCount + parent.activeLayer)
+window.parent.$('#gallery-'+ imageCount + parent.activeLayer + '.slick-initialized').slick("unslick");
+window.parent.$('#gallery-li-'+ imageCount + parent.activeLayer).removeClass('hide')
+
+window.parent.$('#gallery-'+ imageCount + parent.activeLayer).slick({
+    infinite: true,
+    slidesToShow: 3,
+    slidesToScroll: 3,
+    dots: false,
+    prevArrow: false,
+    nextArrow: false
+})
+
+
+
+
+$(".videoIcon").remove();
+
+var slides = window.parent.document.getElementsByClassName("videoOpen");
+for(var i = 0; i < slides.length; i++)
+{
+   slides.item(i).insertAdjacentHTML('afterend', '<div class="videoIcon"><img src="assets/drawing2/icons/play.svg"></div>');
+}
+
+window.parent.$('#gallery-'+ imageCount + parent.activeLayer).removeClass('hide')
+
+
+window.parent.$(".slickButton").removeClass('hide')
+
+canvas.remove()
+
+console.log('Image Uploaded successfully')
+
+window.parent.$(".loader").hide().fadeOut('slow');
+
+
+
+
+}
+
+
+
+
+
+};
+image.src = event.srcElement.result;
+
+
+
+
+
+
+}
+
+
+
+}
+
+if( counter <= filesAmount ) {
+
+
+    getOrientation(input.files[0], function(orientation) {
+        parent._correction = orientation
+
+
+    })
+
+
+    reader.readAsDataURL(input.files[i])
+
+    objs = parent.canvas.getObjects().map(function(selected_object) {
+
+        if(selected_object.id == 'imageObject' &&  selected_object.layerCount == imageCount){
+
+            src = "https://easypermit.net/assets/drawing2/icons/eyeGreen.svg"
+
+            selected_object.setSrc(src, function () {
+                parent.canvas.renderAll();
+
+            });
+        }
+    }); 
+
+
+
+}
+
+}
+}
+}
+// });
+
+
+
+// }
+
+// };
+
+
+
+function getOrientation(file, callback) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+
+        var view = new DataView(e.target.result);
+        if (view.getUint16(0, false) != 0xFFD8) return callback(-2);
+        var length = view.byteLength, offset = 2;
+        while (offset < length) {
+            var marker = view.getUint16(offset, false);
+            offset += 2;
+            if (marker == 0xFFE1) {
+                if (view.getUint32(offset += 2, false) != 0x45786966) return callback(-1);
+                var little = view.getUint16(offset += 6, false) == 0x4949;
+                offset += view.getUint32(offset + 4, little);
+                var tags = view.getUint16(offset, little);
+                offset += 2;
+                for (var i = 0; i < tags; i++)
+                    if (view.getUint16(offset + (i * 12), little) == 0x0112){
+                        return callback(view.getUint16(offset + (i * 12) + 8, little));
+                    }
+                }
+                else if ((marker & 0xFF00) != 0xFF00) break;
+                else offset += view.getUint16(offset, false);
+            }
+            return callback(-1);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+
+
+
+    var rotate64 = function(base64data, degrees, enableURI) {
+        return new Promise(function(resolve, reject) {
+    //assume 90 degrees if not provided
+    degrees = degrees ? degrees : 90;
+
+    var canvas = document.createElement("canvas");
+    canvas.setAttribute("id", "hidden-canvas");
+    canvas.style.display = "none";
+    parent.document.getElementById("body").appendChild(canvas);
+
+    var ctx = canvas.getContext("2d");
+
+    var image = new Image();
+     //assume png if not provided
+     image.src =  base64data;
+     image.onload = function() {
+        var w = image.width;
+        var h = image.height;
+        var rads = degrees * Math.PI/180;
+        var c = Math.cos(rads);
+        var s = Math.sin(rads);
+        if (s < 0) { s = -s; }
+        if (c < 0) { c = -c; }
+       //use translated width and height for new canvas
+       canvas.width = h * s + w * c;
+       canvas.height = h * c + w * s;
+       //draw the rect in the center of the newly sized canvas
+       ctx.translate(canvas.width/2, canvas.height/2);
+       ctx.rotate(degrees * Math.PI / 180);
+       ctx.drawImage(image, -image.width/2, -image.height/2);
+       //assume plain base64 if not provided
+       resolve(enableURI ? canvas.toDataURL() : canvas.toDataURL().split(",")[1]);
+       parent.document.getElementById("body").removeChild(canvas);
+   };
+   image.onerror = function() {
+    reject("Unable to rotate data\n" + image.src);
+};
+});
+    }
+
+
+
+
+// var imagesPreview = function(input, imageCount) {
+
+//     var $img
+
+//     if (input.files) {
+//         var filesAmount = input.files.length;
+
+//         var counter = 0
+
+//         console.log(input.files)
+
+//         total_byte = input.files["0"].size
+
+
+
+
+
+//            reduceFileSize(input.files[0], 500*1024, 2000, Infinity, 0.5, blob => {
+//                                 let body = new FormData();
+//                                 body.set('file', blob,  blob.name || "file.jpg");
+//                                 body.set('filename', parent.getFile.url);
+//                                 body.set('activeLayer', parent.activeLayer);
+//                                 body.set('imageCount', 1);
+//                                 console.log("blob")
+//                                 console.log(body)
+//                                 fetch('/assets/drawing2/textImageServer.php', {method: 'POST', body})
+//                                 .then((res) => { return res.text();})
+//                                 .then((data) => { 
+//                                     console.log(data)  
+//                                     var data = JSON.parse(data)
+//                                     console.log(data)
+//                                     console.log(body)
+
+//                                     alert(data.filename)
+
+//                                      document.location.reload();
+
+
+// })
+//                             })
+
+//        }
+
+//    }
+
+
+
+
+
+
+</script>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="82 -40 19.4 19.4">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #969696;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g id="ic_change_history_black_24px" transform="translate(101.4 -40) rotate(90)">
+    <path id="Path_7284" data-name="Path 7284" class="cls-1" d="M10.083,7.047l5.165,8.269H4.918l5.165-8.269m0-3.047L2,16.933H18.167Z" transform="translate(-0.383 -0.767)"/>
+    <path id="Path_7285" data-name="Path 7285" class="cls-2" d="M0,0H19.4V19.4H0Z"/>
+  </g>
+</svg>

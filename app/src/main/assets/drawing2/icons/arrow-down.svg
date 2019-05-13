@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="364.318 399.932 14.01 6.469">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #000;
+      }
+    </style>
+  </defs>
+  <path id="icon-arrow-down" class="cls-1" d="M200,208h14.01l-7,6.469Z" transform="translate(578.328 614.4) rotate(180)"/>
+</svg>
