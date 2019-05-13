@@ -62,7 +62,7 @@ import de.ailis.pherialize.MixedArray;
 import de.ailis.pherialize.Pherialize;
 
 /**
- * The <code>ViewPagerFragmentActivity</code> class is the fragment activity hosting the ViewPager
+ * The <code>ViewPagerFragmentActivity11111111</code> class is the fragment activity hosting the ViewPager
  * @author mwho
  */
 public class MainActivity extends FragmentActivity {
