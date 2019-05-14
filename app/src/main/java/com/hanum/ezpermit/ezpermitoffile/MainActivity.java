@@ -222,6 +222,40 @@ public class MainActivity extends FragmentActivity {
 
         /** Show a toast from the web page */
         @JavascriptInterface
+        public void getAllAccounts() {
+
+            File sdCard = Environment.getExternalStorageDirectory();
+            String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/";
+
+            final JSONArray allAccounts = new JSONArray();
+
+
+            File f = new File(path);
+            File[] files = f.listFiles();
+            for (File inFile : files) {
+                if (inFile.isDirectory()) {
+                    // is directory
+                    allAccounts.put(inFile.getName());
+
+
+                }
+            }
+
+
+
+
+            webView.post(new Runnable() {
+                @Override
+                public void run() {
+                    webView.loadUrl("javascript:getAllAccounts("+ allAccounts +")"); //if passing in an object. Mapping may need to take place
+                }
+            });
+
+
+        }
+
+        /** Show a toast from the web page */
+        @JavascriptInterface
         public void saveLayer(String response , String Name, String path , String activeLayer) {
 
 
@@ -1357,8 +1391,8 @@ public class MainActivity extends FragmentActivity {
 //        webView.loadUrl("javascript:init('androidTest')");
 
 //        webView.loadUrl("https://www.easypermit.net/index");
-        webView.loadUrl("https://www.easypermit.net/#/login/signin");
-//        webView.loadUrl("https://www.easypermit.net/#/app/ViewProjectDetails");
+//        webView.loadUrl("https://www.easypermit.net/#/login/signin");
+        webView.loadUrl("https://www.easypermit.net/#/app/ViewProjectDetails");
 //        webView.loadUrl("https://easypermit.net/#/offline");
 //            webView.loadUrl("file:///android_asset/drawing2/index.html");
 
@@ -1625,6 +1659,8 @@ public class MainActivity extends FragmentActivity {
             return filePath.substring(strLength + 1).toLowerCase();
         return null;
     }
+
+
 
 
 
