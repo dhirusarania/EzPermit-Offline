@@ -266,6 +266,35 @@ public class MainActivity extends FragmentActivity {
 
 
 
+            }else if(response.equals("getData")){
+
+                Log.e("zzz", "getData");
+
+                File sdCard = Environment.getExternalStorageDirectory();
+                String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/calendar/main.json";
+
+
+                String singleLayerData = readFile(path);
+
+                singleLayerData = convertJSONString(singleLayerData);
+
+                singleLayerData = trimDoubleQuotes(singleLayerData);
+
+
+                Log.e("zzz", singleLayerData);
+
+
+                final String finalSingleLayerData = singleLayerData;
+
+                webView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        webView.loadUrl("javascript:calendar1(" + finalSingleLayerData + ")"); //if passing in an object. Mapping may need to take place
+                    }
+                });
+
+
+
             }else if(response.equals("data")){
 
 
@@ -406,12 +435,28 @@ public class MainActivity extends FragmentActivity {
 
                     final String finalSingleLayerData = singleLayerData;
 
-                    webView.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            webView.loadUrl("javascript:calendar1(" + finalSingleLayerData + ")"); //if passing in an object. Mapping may need to take place
-                        }
-                    });
+                                    webView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        webView.setWebViewClient(new WebViewClient(){
+                            public void onPageFinished(WebView view, String url){
+                                //Here you want to use .loadUrl again
+                                //on the webView object and pass in
+                                //"javascript:<your javaScript function"
+
+
+                                view.loadUrl("javascript:calendar1(" + finalSingleLayerData + ")"); //if passing in an object. Mapping may need to take place
+                            }
+                        });
+                    }
+                });
+
+//                    webView.post(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            webView.loadUrl("javascript:calendar1(" + finalSingleLayerData + ")"); //if passing in an object. Mapping may need to take place
+//                        }
+//                    });
 
 
                 }else {
@@ -1300,21 +1345,30 @@ public class MainActivity extends FragmentActivity {
 
         if ( !isNetworkAvailable() ) { // loading offline
             webView.getSettings().setCacheMode( WebSettings.LOAD_CACHE_ELSE_NETWORK );
-//            webView.loadUrl("file:///android_asset/drawing2/calendar.html");
+            webView.loadUrl("file:///android_asset/drawing2/index.html");
 
-        }
+        }else{
 
+            //        webView.loadUrl("file:///android_asset/drawing2/calendar.html");
 //        webView.loadUrl("file:///android_asset/drawing2/calendar.html");
-//        webView.loadUrl("file:///android_asset/drawing2/calendar.html");
 
 
-        webView.loadUrl("file:///android_asset/drawing2/offline.html");
+//            webView.loadUrl("file:///android_asset/drawing2/offline.html");
 //        webView.loadUrl("javascript:init('androidTest')");
 
 //        webView.loadUrl("https://www.easypermit.net/index");
-//        webView.loadUrl("https://www.easypermit.net/#/login/signin");
+        webView.loadUrl("https://www.easypermit.net/#/login/signin");
 //        webView.loadUrl("https://www.easypermit.net/#/app/ViewProjectDetails");
 //        webView.loadUrl("https://easypermit.net/#/offline");
+//            webView.loadUrl("file:///android_asset/drawing2/index.html");
+
+
+
+        }
+
+
+
+
 
 
 

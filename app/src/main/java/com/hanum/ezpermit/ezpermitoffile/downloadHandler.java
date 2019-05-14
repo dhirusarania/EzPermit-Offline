@@ -144,6 +144,15 @@
                                     }
                                     if (isDownloadFailed == 0) {
 
+
+                                        webView.post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                webView.loadUrl("javascript:download__status('started')");
+                                            }
+                                        });
+
+
                                         downloadFile(replacement, object , null);
 
 
@@ -323,6 +332,7 @@
                                 Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/calendar");
 
                                 boolean success = true;
+                                boolean fileDelete = true;
                                 if (!folder.exists()) {
                                     success = folder.mkdirs();
                                 }
@@ -332,6 +342,10 @@
                                     String path = sdCard.getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/calendar/" + "main.json";
 
                                     Log.i("wait" , "Value1" + path);
+
+                                    File myFile = new File(path);
+                                    if(myFile.exists())
+                                        fileDelete = myFile.delete();
 
 
                                     Writer writer = null;
