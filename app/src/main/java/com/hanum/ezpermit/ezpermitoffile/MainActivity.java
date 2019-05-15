@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
@@ -19,13 +20,18 @@ import java.util.regex.Pattern;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -157,9 +163,40 @@ public class MainActivity extends FragmentActivity {
 
         if(CAPTURE_MODE == 2){
             videoUri = intent.getData();
-        }
+            Log.d("Videohaha11", String.valueOf(videoUri));
 
-            if (Build.VERSION.SDK_INT >= 21) {
+
+            Bitmap bbicon;
+
+            try {
+                bbicon = retriveVideoFrameFromVideo(String.valueOf(getRealPathFromURI(videoUri)));
+
+                File sdCard = Environment.getExternalStorageDirectory();
+                String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/";
+                OutputStream fOut = null;
+                File file = new File(path, "thuba.jpg");
+                fOut = new FileOutputStream(file);
+
+                bbicon.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
+                fOut.flush();
+                fOut.close();
+
+                MediaStore.Images.Media.insertImage(getContentResolver()
+                        ,file.getAbsolutePath(),file.getName(),file.getName());
+
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+
+            final Uri finalVideoUri = videoUri;
+            webView.post(new Runnable() {
+                @Override
+                public void run() {
+                    webView.loadUrl("javascript:sendVideo('"+ String.valueOf(getRealPathFromURI(finalVideoUri)) +"' , 1, 66565)"); //if passing in an object. Mapping may need to take place
+                }
+            });
+
+        }else if (Build.VERSION.SDK_INT >= 21) {
 
                 Log.d("log", "this" + resultCode);
                 //checking if response is positive
@@ -173,7 +210,7 @@ public class MainActivity extends FragmentActivity {
 
                                if(CAPTURE_MODE == 2){
 
-                                   Log.d("Videohaha11", String.valueOf(getRealPathFromURI(videoUri)));
+                                   Log.d("Videohaha1122", String.valueOf(getRealPathFromURI(videoUri)));
 
                                    mCM = "file:" + String.valueOf(getRealPathFromURI(videoUri));
 
@@ -225,7 +262,7 @@ public class MainActivity extends FragmentActivity {
         public void getAllAccounts() {
 
             File sdCard = Environment.getExternalStorageDirectory();
-            String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/";
+            String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/downloads/";
 
             final JSONArray allAccounts = new JSONArray();
 
@@ -266,6 +303,29 @@ public class MainActivity extends FragmentActivity {
 
             createLayerFile(response , path , activeLayer);
 
+
+        }
+
+        /** Show a toast from the web page */
+        @JavascriptInterface
+        public void changeSession(String serviceID , String projectID, String test) {
+
+
+            Log.e("checkifFileExist" , String.valueOf(serviceID));
+            Log.e("checkifFileExist" , String.valueOf(projectID));
+            Log.e("checkifFileExist" , test);
+
+
+            SharedPreferences.Editor editor = getSharedPreferences("USER_DATA", MODE_PRIVATE).edit();
+            editor.putInt("projectid", Integer.parseInt(projectID));
+            editor.putInt("service_account", Integer.parseInt(serviceID));
+            editor.apply();
+
+
+
+
+
+            showToast("goOffline");
 
         }
 
@@ -377,7 +437,15 @@ public class MainActivity extends FragmentActivity {
 //
 //                }
 
-                String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/calendar/main.json";
+                SharedPreferences prefs = getSharedPreferences("USER_DATA", MODE_PRIVATE);
+
+                projectid = prefs.getInt("projectid", -37);
+
+                serviceaccount =prefs.getInt("service_account", -37);
+
+                currentUserid =prefs.getInt("current_User", -37);
+
+                String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/calendar/main.json";
                 Log.d("Files", "Path: " + path);
                 File f = new File(path);
 
@@ -391,7 +459,7 @@ public class MainActivity extends FragmentActivity {
                 if(!isNotFound){
 
 
-                    Log.e("checkDataonStorage" ,"!null");
+                    Log.e("checkDataonStorageDatk" ,"!null");
 
 
                     webView.post(new Runnable() {
@@ -403,7 +471,7 @@ public class MainActivity extends FragmentActivity {
 
                 }else{
 
-                    Log.e("checkDataonStorage" ,"nullll");
+                    Log.e("checkDataonStorageDatk" ,"nullll");
 
 
                     webView.post(new Runnable() {
@@ -421,12 +489,21 @@ public class MainActivity extends FragmentActivity {
             }else if(response.equals("goOffline")){
 
 
+                SharedPreferences prefs = getSharedPreferences("USER_DATA", MODE_PRIVATE);
+
+                projectid = prefs.getInt("projectid", -37);
+
+                serviceaccount =prefs.getInt("service_account", -37);
+
+                currentUserid =prefs.getInt("current_User", -37);
+
+
 
 
                 Log.e("checkDataonStorage" ,"sdsds");
 
 
-                String path1 = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/calendar/main.json";
+                String path1 = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/calendar/main.json";
                 Log.d("Files", "Path: " + path1);
                 File f = new File(path1);
 
@@ -454,7 +531,7 @@ public class MainActivity extends FragmentActivity {
 
 
                     File sdCard = Environment.getExternalStorageDirectory();
-                    String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/calendar/main.json";
+                    String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/calendar/main.json";
 
 
                     String singleLayerData = readFile(path);
@@ -1181,6 +1258,13 @@ public class MainActivity extends FragmentActivity {
         Log.d("Tag" , "Response: ");
 
 
+
+
+
+        registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+
+
+
         // MY_PREFS_NAME - a static String variable like:
 //public static final String MY_PREFS_NAME = "MyPrefsFile";
 
@@ -1300,53 +1384,60 @@ public class MainActivity extends FragmentActivity {
                     }
 
 
+                    if(CAPTURE_MODE == 1) {
+
+
 //                    Intent takePictureIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-                    if (takePictureIntent.resolveActivity(MainActivity.this.getApplicationContext().getPackageManager()) != null) {
-                        File photoFile = null;
-                        try {
-                            photoFile = createImageFile();
-                            takePictureIntent.putExtra("PhotoPath", mCM);
-                        } catch (IOException ex) {
-                            Log.e(TAG, "Image file creation failed", ex);
-                        }
-                        if (photoFile != null) {
-                            mCM = "file:" + photoFile.getAbsolutePath();
+                        if (takePictureIntent.resolveActivity(MainActivity.this.getApplicationContext().getPackageManager()) != null) {
+                            File photoFile = null;
+                            try {
+                                photoFile = createImageFile();
+                                takePictureIntent.putExtra("PhotoPath", mCM);
+                            } catch (IOException ex) {
+                                Log.e(TAG, "Image file creation failed", ex);
+                            }
+                            if (photoFile != null) {
+                                mCM = "file:" + photoFile.getAbsolutePath();
 
-                            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                            } else {
+                                takePictureIntent = null;
+                            }
+                        }
+                        Intent contentSelectionIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                        contentSelectionIntent.addCategory(Intent.CATEGORY_OPENABLE);
+
+                        if (Arrays.toString(fileChooserParams.getAcceptTypes()).equals("[image/*]")) {
+                            contentSelectionIntent.setType("image/*");
+                        } else if (Arrays.toString(fileChooserParams.getAcceptTypes()).equals("[video/*]")) {
+                            contentSelectionIntent.setType("video/*");
+
+                        }
+
+
+                        if (multiple_files) {
+                            contentSelectionIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                        }
+                        Intent[] intentArray;
+                        if (takePictureIntent != null) {
+                            Log.e("eerer", "sss" + mCM);
+                            intentArray = new Intent[]{takePictureIntent};
                         } else {
-                            takePictureIntent = null;
+                            Log.e("eerer", "sss r" + mCM);
+                            intentArray = new Intent[0];
                         }
-                    }
-                    Intent contentSelectionIntent = new Intent(Intent.ACTION_GET_CONTENT);
-                    contentSelectionIntent.addCategory(Intent.CATEGORY_OPENABLE);
 
-                    if(Arrays.toString(fileChooserParams.getAcceptTypes()).equals("[image/*]")){
-                        contentSelectionIntent.setType("image/*");
-                    }else if(Arrays.toString(fileChooserParams.getAcceptTypes()).equals("[video/*]")){
-                        contentSelectionIntent.setType("video/*");
+                        Intent chooserIntent = new Intent(Intent.ACTION_CHOOSER);
+                        chooserIntent.putExtra(Intent.EXTRA_INTENT, contentSelectionIntent);
+                        chooserIntent.putExtra(Intent.EXTRA_TITLE, "File Chooser");
+                        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentArray);
+                        startActivityForResult(chooserIntent, FCR);
 
-                    }
-
-
-                    if (multiple_files) {
-                        contentSelectionIntent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-                    }
-                    Intent[] intentArray;
-                    if (takePictureIntent != null) {
-                        Log.e("eerer", "sss" + mCM);
-                        intentArray = new Intent[]{takePictureIntent};
-                    } else {
-                        Log.e("eerer", "sss r" + mCM);
-                        intentArray = new Intent[0];
-                    }
-
-                    Intent chooserIntent = new Intent(Intent.ACTION_CHOOSER);
-                    chooserIntent.putExtra(Intent.EXTRA_INTENT, contentSelectionIntent);
-                    chooserIntent.putExtra(Intent.EXTRA_TITLE, "File Chooser");
-                    chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, intentArray);
-                    startActivityForResult(chooserIntent, FCR);
 //                    startActivityForResult(ta, FCR);
-                    return true;
+                        return true;
+                    }else{
+                        return false;
+                    }
                 }else{
                     return false;
                 }
@@ -1539,14 +1630,27 @@ public class MainActivity extends FragmentActivity {
         return webView;
     }
 
+
+
+
+    BroadcastReceiver onComplete=new BroadcastReceiver() {
+        public void onReceive(Context ctxt, Intent intent) {
+            downloadComplete();
+        }
+    };
+
+
+
     public static void downloadComplete(){
 
-        Log.d("allfileList" , "allfileList" + allfileList.length());
+        Log.d("allfileList" , "allfileList" + allfileList);
 
         Log.d("checkifFileExist" , "checkifFileExist-pageNumber/" + projectid + "/" + serviceaccount + "/" + currentUserid);
 
         boolean isNotFound = false;
 
+        Log.d("tester", "sss" + serviceaccount);
+        Log.d("tester", "sss" + projectid);
 
         for(int i = 0; i < allfileList.length(); i++) {
 
@@ -1563,7 +1667,7 @@ public class MainActivity extends FragmentActivity {
                 String replacedStr = String.valueOf(allfileList.get(i)).replace("https://easypermit.net/storage/" + serviceaccount + "/Common/" + projectid + "/drw(progress)", "");
 
                 File sdCard = Environment.getExternalStorageDirectory();
-                String path = sdCard.getAbsolutePath() + "/Android/data/com.hanum.ezpermit.ezpermitoffile/files" + replacedStr;
+                String path = sdCard.getAbsolutePath() + "/Android/data/com.hanum.ezpermit.ezpermitoffile/files/downloads/" + serviceaccount + "-" + projectid + replacedStr;
 
 
                 f = new File(path);
@@ -1590,27 +1694,47 @@ public class MainActivity extends FragmentActivity {
         if(!isNotFound){
 
 
-            Log.e("checkDataonStorage" ,"!null");
+            webView.post(new Runnable() {
+                @Override
+                public void run() {
+                    webView.loadUrl("javascript:checkDataonStorage('not_empty')"); //if passing in an object. Mapping may need to take place
+                }
+            });
 
 
             webView.post(new Runnable() {
                 @Override
                 public void run() {
-                    webView.loadUrl("javascript:checkDataonStorage('not_empty')");
+                    webView.loadUrl("javascript:download__status('completed')");
                 }
             });
+
+
+            Log.e("checkDataonStorage1111" ,"!null");
+
+
 
         }else{
 
-            Log.e("checkDataonStorage" ,"nullll");
+            Log.e("checkDataonStorage22222" ,"nullll");
 
 
             webView.post(new Runnable() {
                 @Override
                 public void run() {
-                    webView.loadUrl("javascript:checkDataonStorage('empty')");
+                    webView.loadUrl("javascript:checkDataonStorage('empty')"); //if passing in an object. Mapping may need to take place
                 }
             });
+
+
+            webView.post(new Runnable() {
+                @Override
+                public void run() {
+                    webView.loadUrl("javascript:download__status('completed')");
+                }
+            });
+
+
 
         }
 
@@ -1658,6 +1782,45 @@ public class MainActivity extends FragmentActivity {
         if(strLength > 0)
             return filePath.substring(strLength + 1).toLowerCase();
         return null;
+    }
+
+
+    /**
+     * Retrieve video frame image from given video path
+     *
+     * @param p_videoPath
+     *            the video file path
+     *
+     * @return Bitmap - the bitmap is video frame image
+     *
+     * @throws Throwable
+     */
+    @SuppressLint("NewApi")
+    public static Bitmap retriveVideoFrameFromVideo(String p_videoPath)
+            throws Throwable
+    {
+        Bitmap m_bitmap = null;
+        MediaMetadataRetriever m_mediaMetadataRetriever = null;
+        try
+        {
+            m_mediaMetadataRetriever = new MediaMetadataRetriever();
+            m_mediaMetadataRetriever.setDataSource(p_videoPath);
+            m_bitmap = m_mediaMetadataRetriever.getFrameAtTime();
+        }
+        catch (Exception m_e)
+        {
+            throw new Throwable(
+                    "Exception in retriveVideoFrameFromVideo(String p_videoPath)"
+                            + m_e.getMessage());
+        }
+        finally
+        {
+            if (m_mediaMetadataRetriever != null)
+            {
+                m_mediaMetadataRetriever.release();
+            }
+        }
+        return m_bitmap;
     }
 
 

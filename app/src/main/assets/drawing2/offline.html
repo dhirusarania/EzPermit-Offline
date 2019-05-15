@@ -4640,6 +4640,46 @@ data = '{"serviceAccountId":"52","invited":0,"SUPERVISOR":0}'
 
 
 
+function sendVideo(a, imageCount, activeLayer){
+
+
+    alert("hahahah")
+    console.log("SendVideo")
+    console.log(imageCount)
+    console.log(activeLayer)
+
+    a = "file:///" + a;
+
+    console.log(a)
+
+    var d1 = document.getElementById('gallery-'+ imageCount + activeLayer);
+
+            console.log('this is arrea')
+            console.log(d1)
+
+
+            d1.insertAdjacentHTML('beforeend', '<div><img data-tag="'+ imageCount + '" data-parent="'+ imageCount +'" class="videoOpen" id="image-' +  activeLayer + '-'  + '" src="' + a +'"></div>');
+
+
+
+            console.log("imageCount" + imageCount + activeLayer)
+$('#gallery-'+ imageCount + activeLayer + '.slick-initialized').slick("unslick");
+$('#gallery-li-'+ imageCount + activeLayer).removeClass('hide')
+
+$('#gallery-'+ imageCount + activeLayer).slick({
+    infinite: true,
+    slidesToShow: 3,
+    slidesToScroll: 3,
+    dots: false,
+    prevArrow: false,
+    nextArrow: false
+})
+
+
+
+}
+
+
 
                     function java(a){
                         console.log("JAVA")
