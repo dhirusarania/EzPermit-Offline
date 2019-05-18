@@ -6533,7 +6533,12 @@ $(document).on('click', '#clearCanvas-action', function(event) {
 
         console.log(getFileExtension(localStorage.getItem('drwFileName')))
 
-        filename = "file:////storage/emulated/0/Android/data/com.hanum.ezpermit.ezpermitoffile/files/" + localStorage.getItem("drwFileURL")
+        serviceAccount = localStorage.getItem('serviceAccount')
+        projectId = localStorage.getItem('projectId')
+
+        filename = "file:////storage/emulated/0/Android/data/com.hanum.ezpermit.ezpermitoffile/files/downloads/" + serviceAccount + "-" + projectId + "/" + localStorage.getItem("drwFileURL")
+
+        console.log(filename)
 
 
         localOpen = 0
@@ -6562,7 +6567,15 @@ $(document).on('click', '#clearCanvas-action', function(event) {
 
             nameofFile = localStorage.getItem('drwFileName')
 
-            filename = "file:////storage/emulated/0/Android/data/com.hanum.ezpermit.ezpermitoffile/files/" + localStorage.getItem("drwFileURL")
+            serviceAccount = localStorage.getItem('serviceAccount')
+        projectId = localStorage.getItem('projectId')
+
+            
+        filename = "file:////storage/emulated/0/Android/data/com.hanum.ezpermit.ezpermitoffile/files/downloads/" + serviceAccount + "-" + projectId + "/" + localStorage.getItem("drwFileURL")
+
+        console.log(filename)
+
+            
 
             console.log(filename , nameofFile)
 

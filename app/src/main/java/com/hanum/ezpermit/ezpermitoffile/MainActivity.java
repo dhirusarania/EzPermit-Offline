@@ -7,10 +7,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -21,6 +25,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -35,9 +40,11 @@ import android.media.MediaMetadataRetriever;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -57,6 +64,12 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 
@@ -66,6 +79,8 @@ import org.json.JSONObject;
 
 import de.ailis.pherialize.MixedArray;
 import de.ailis.pherialize.Pherialize;
+
+import static java.util.Objects.isNull;
 
 /**
  * The <code>ViewPagerFragmentActivity11111111</code> class is the fragment activity hosting the ViewPager
@@ -115,6 +130,11 @@ public class MainActivity extends FragmentActivity {
 
     public int CAPTURE_MODE = 0;
 
+
+    public int downloadedFileCount = 0;
+
+    public int totalFileCount = 0;
+
     public JSONArray downloadResponse1 = new JSONArray();
 
     public static final int REQUEST_VIDEO_CAPTURE = 1;
@@ -128,6 +148,14 @@ public class MainActivity extends FragmentActivity {
     private boolean multiple_files = false;
 
     public static ViewPager pager;
+
+    public DownloadTask downloadTask;
+
+
+
+    ProgressDialog mProgressDialog;
+
+
 
     private String getRealPathFromURI(Uri contentURI) {
         String result;
@@ -246,6 +274,7 @@ public class MainActivity extends FragmentActivity {
     static Activity activity;
     public MainActivity(){
         this.activity = activity;
+        downloadTask = null;
     }
 
 
@@ -383,7 +412,7 @@ public class MainActivity extends FragmentActivity {
                 webView.post(new Runnable() {
                     @Override
                     public void run() {
-                        webView.loadUrl("javascript:calendar1(" + finalSingleLayerData + ")"); //if passing in an object. Mapping may need to take place
+                        webView.loadUrl("javascript:calendar1(" + finalSingleLayerData + " , " + serviceaccount + " , " + projectid + ")"); //if passing in an object. Mapping may need to take place
                     }
                 });
 
@@ -556,7 +585,7 @@ public class MainActivity extends FragmentActivity {
                                 //"javascript:<your javaScript function"
 
 
-                                view.loadUrl("javascript:calendar1(" + finalSingleLayerData + ")"); //if passing in an object. Mapping may need to take place
+                                view.loadUrl("javascript:calendar1(" + finalSingleLayerData + " , " + serviceaccount + " , " + projectid + ")"); //if passing in an object. Mapping may need to take place
                             }
                         });
                     }
@@ -631,9 +660,7 @@ public class MainActivity extends FragmentActivity {
                 Log.d("checkifFileExist" , "checkifFileExist-pageNumber/" + projectid + "/" + serviceaccount + "/" + currentUserid);
 
 
-                downloadHandler downloadHandler = new downloadHandler();
-
-                int downloadResponse = downloadHandler.sendAndRequestResponse(projectid, serviceaccount, currentUserid);
+                int downloadResponse = sendAndRequestResponse(projectid, serviceaccount, currentUserid);
 
 
                 downloadHandler downloadHandler1 = new downloadHandler();
@@ -913,7 +940,7 @@ public class MainActivity extends FragmentActivity {
 
 
         File sdCard = Environment.getExternalStorageDirectory();
-        String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/" + foldername + "/" + filename;
+        String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/" + foldername + "/" + filename;
 //        String path = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/drawing2/css";
 
 
@@ -973,7 +1000,7 @@ public class MainActivity extends FragmentActivity {
         while (i < list.size()) {
             Log.d("Files", "FileName:Data" + list.getString(i));
 
-            String layers = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/" + foldername + "/" + originalFilename + "-" + list.getString(i) + ".ezp";
+            String layers = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/" + foldername + "/" + originalFilename + "-" + list.getString(i) + ".ezp";
 
             Log.d("Files", "FileName:Layers" + layers);
 
@@ -1259,9 +1286,29 @@ public class MainActivity extends FragmentActivity {
 
 
 
+// instantiate it within the onCreate method
+        mProgressDialog = new ProgressDialog(MainActivity.this);
+        mProgressDialog.setMessage("Downloading Files to Device Storage");
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setCanceledOnTouchOutside(false);
 
 
-        registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+
+        mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                downloadTask.cancel(true); //cancel the task
+            }
+        });
+
+
+
+
+
+//        registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
 
 
@@ -1567,7 +1614,7 @@ public class MainActivity extends FragmentActivity {
         webView.post(new Runnable() {
             @Override
             public void run() {
-                webView.loadUrl("javascript:calendar1('"+ finalDownloadResponse +"')"); //if passing in an object. Mapping may need to take place
+                webView.loadUrl("javascript:calendar1('"+ finalDownloadResponse +" , " + serviceaccount + " , " + projectid + "')"); //if passing in an object. Mapping may need to take place
             }
         });
 
@@ -1632,16 +1679,46 @@ public class MainActivity extends FragmentActivity {
 
 
 
+//
+//    BroadcastReceiver onComplete=new BroadcastReceiver() {
+//        public void onReceive(Context ctxt, Intent intent) {
+//
+//            Log.e("downlocCOmplete" , "onReceieve");
+//
+//            downloadedFileCount++;
+//
+//
+//            webView.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    webView.loadUrl("javascript:download__status('resume', " + downloadedFileCount + ")");
+//                }
+//            });
+//
+//            Log.e("downlocCOmplete" , "onReceieve" + downloadedFileCount);
+//            Log.e("downlocCOmplete" , "onReceieve" + totalFileCount);
+//
+//            if(downloadedFileCount == totalFileCount) {
+//
+//                Log.e("downlocCOmplete" , "COmpleted");
+//
+//                downloadComplete();
+//            }
+//        }
+//    };
 
-    BroadcastReceiver onComplete=new BroadcastReceiver() {
-        public void onReceive(Context ctxt, Intent intent) {
-            downloadComplete();
-        }
-    };
 
 
+    public void downloadComplete(){
 
-    public static void downloadComplete(){
+
+        SharedPreferences prefs = getSharedPreferences("USER_DATA", MODE_PRIVATE);
+
+        projectid = prefs.getInt("projectid", -37);
+
+        serviceaccount =prefs.getInt("service_account", -37);
+
+        currentUserid =prefs.getInt("current_User", -37);
 
         Log.d("allfileList" , "allfileList" + allfileList);
 
@@ -1652,89 +1729,91 @@ public class MainActivity extends FragmentActivity {
         Log.d("tester", "sss" + serviceaccount);
         Log.d("tester", "sss" + projectid);
 
-        for(int i = 0; i < allfileList.length(); i++) {
+        if(null != allfileList) {
+
+            for (int i = 0; i < allfileList.length(); i++) {
 
 
-            try {
-                Log.d("Files", "Path: " + allfileList.get(i));
-            } catch (JSONException e) {
-                e.printStackTrace();
+                try {
+                    Log.d("Files", "Path: " + allfileList.get(i));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                File f = null;
+                try {
+
+                    String replacedStr = String.valueOf(allfileList.get(i)).replace("https://easypermit.net/storage/" + serviceaccount + "/Common/" + projectid + "/drw(progress)", "");
+
+                    File sdCard = Environment.getExternalStorageDirectory();
+                    String path = sdCard.getAbsolutePath() + "/Android/data/com.hanum.ezpermit.ezpermitoffile/files/downloads/" + serviceaccount + "-" + projectid + replacedStr;
+
+
+                    f = new File(path);
+
+                    Log.d("Files", "Path: " + path);
+                    Log.d("Files", "Path: " + allfileList.get(i));
+
+
+                    if (!f.exists()) {
+
+                        isNotFound = true;
+
+                        break;
+
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+
             }
 
-            File f = null;
-            try {
-
-                String replacedStr = String.valueOf(allfileList.get(i)).replace("https://easypermit.net/storage/" + serviceaccount + "/Common/" + projectid + "/drw(progress)", "");
-
-                File sdCard = Environment.getExternalStorageDirectory();
-                String path = sdCard.getAbsolutePath() + "/Android/data/com.hanum.ezpermit.ezpermitoffile/files/downloads/" + serviceaccount + "-" + projectid + replacedStr;
+            if (!isNotFound) {
 
 
-                f = new File(path);
+                webView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        webView.loadUrl("javascript:checkDataonStorage('not_empty')"); //if passing in an object. Mapping may need to take place
+                    }
+                });
 
-                Log.d("Files", "Path: " + path);
-                Log.d("Files", "Path: " + allfileList.get(i));
+
+//                webView.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        webView.loadUrl("javascript:download__status('completed',0)");
+//                    }
+//                });
 
 
-                if (!f.exists()) {
+                Log.e("checkDataonStorage1111", "!null");
 
-                    isNotFound = true;
 
-                    break;
+            } else {
 
-                }
+                Log.e("checkDataonStorage22222", "nullll");
 
-            } catch (JSONException e) {
-                e.printStackTrace();
+
+//                webView.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        webView.loadUrl("javascript:checkDataonStorage('empty')"); //if passing in an object. Mapping may need to take place
+//                    }
+//                });
+
+
+                webView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        webView.loadUrl("javascript:download__status('completed',0)");
+                    }
+                });
+
+
             }
-
-
-        }
-
-        if(!isNotFound){
-
-
-            webView.post(new Runnable() {
-                @Override
-                public void run() {
-                    webView.loadUrl("javascript:checkDataonStorage('not_empty')"); //if passing in an object. Mapping may need to take place
-                }
-            });
-
-
-            webView.post(new Runnable() {
-                @Override
-                public void run() {
-                    webView.loadUrl("javascript:download__status('completed')");
-                }
-            });
-
-
-            Log.e("checkDataonStorage1111" ,"!null");
-
-
-
-        }else{
-
-            Log.e("checkDataonStorage22222" ,"nullll");
-
-
-            webView.post(new Runnable() {
-                @Override
-                public void run() {
-                    webView.loadUrl("javascript:checkDataonStorage('empty')"); //if passing in an object. Mapping may need to take place
-                }
-            });
-
-
-            webView.post(new Runnable() {
-                @Override
-                public void run() {
-                    webView.loadUrl("javascript:download__status('completed')");
-                }
-            });
-
-
 
         }
 
@@ -1823,6 +1902,370 @@ public class MainActivity extends FragmentActivity {
         return m_bitmap;
     }
 
+
+    private static final String newLine  = System.getProperty("line.separator");
+
+    private boolean isCancelled = false;
+
+    // usually, subclasses of AsyncTask are declared inside the activity class.
+// that way, you can easily modify the UI thread from here
+    public class DownloadTask extends AsyncTask<JSONArray, Integer, String> {
+
+        private Context context;
+        private PowerManager.WakeLock mWakeLock;
+
+        public DownloadTask(Context context) {
+            this.context = context;
+        }
+
+
+        @Override
+//        protected String doInBackground(String... sUrl) {
+            protected String doInBackground(JSONArray... jsonArrays) {
+            InputStream input = null;
+            OutputStream output = null;
+            HttpURLConnection connection = null;
+
+
+            JSONArray array = jsonArrays[0];
+
+            for (int i = 0; i < array.length(); i++) {
+
+                try {
+
+
+                String URL = (String) array.get(i);
+
+                URL url = new URL(URL);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                // expect HTTP 200 OK, so we don't mistakenly save error report
+                // instead of the file
+                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                    return "Server returned HTTP " + connection.getResponseCode()
+                            + " " + connection.getResponseMessage();
+                }
+
+                // this will be useful to display download percentage
+                // might be -1: server did not report the length
+                int fileLength = connection.getContentLength();
+
+
+                String fileName = URL.substring(URL.lastIndexOf('/') + 1, URL.length());
+
+//
+//
+                String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/" + fileName;
+                Log.i("wait", "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/" + fileName);
+
+
+                // download the file
+                input = connection.getInputStream();
+                output = new FileOutputStream(path);
+
+
+
+                byte data[] = new byte[4096];
+                long total = 0;
+                int count;
+                while ((count = input.read(data)) != -1 && !isCancelled) {
+                    // allow canceling with back button
+
+
+
+                    if (isCancelled() || isCancelled) {
+                        input.close();
+                        return null;
+                    }
+                    total += count;
+                    // publishing the progress....
+                    if (fileLength > 0 && !isCancelled) // only if total length is known
+                        publishProgress((int) (total * 100 / fileLength));
+                    output.write(data, 0, count);
+                }
+
+            } catch (Exception e) {
+                return e.toString();
+            } finally {
+                try {
+                    if (output != null)
+                        output.close();
+                    if (input != null)
+                        input.close();
+                } catch (IOException ignored) {
+                }
+
+                if (connection != null)
+                    connection.disconnect();
+            }
+        }
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // take CPU lock to prevent CPU from going off if the user
+            // presses the power button during download
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                    getClass().getName());
+            mWakeLock.acquire();
+
+            mProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener(){
+                // Set a click listener for progress dialog cancel button
+                @Override
+                public void onClick(DialogInterface dialog, int which){
+                    // dismiss the progress dialog
+//                        downloadTask.cancel(true); //cancel the task
+                        isCancelled = true;
+
+
+                }
+            });
+
+            mProgressDialog.show();
+        }
+
+
+        @Override
+        protected void onProgressUpdate(Integer... progress) {
+            super.onProgressUpdate(progress);
+            // if we get here, length is known, now set indeterminate to false
+            mProgressDialog.setIndeterminate(false);
+            mProgressDialog.setMax(totalFileCount);
+            mProgressDialog.setProgress(downloadedFileCount);
+
+
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+
+            Log.d("onPostExec" , String.valueOf(downloadedFileCount));
+            Log.d("onPostExec" , String.valueOf(result));
+
+            if(totalFileCount == downloadedFileCount){
+
+
+                mWakeLock.release();
+                mProgressDialog.dismiss();
+
+
+                downloadComplete();
+
+
+            }
+
+            if (result != null)
+                Toast.makeText(context,"Download error: "+result, Toast.LENGTH_LONG).show();
+            else
+                Toast.makeText(context,"File downloaded", Toast.LENGTH_SHORT).show(); downloadedFileCount++;
+        }
+
+    }
+
+
+
+
+/**
+*
+*   all download handler
+*
+*
+ */
+
+private int dataResponse = 0;
+    private RequestQueue requestQueue;
+    private JsonObjectRequest  mStringRequest;
+    private String url;
+    public JSONArray arryaList;
+    public String calendar;
+
+
+
+public int sendAndRequestResponse(final int projID, final int servID, int userID) {
+
+
+    Log.i("aaaaaaaaaaaaaa" , "Value" + projID + "/" + servID);
+
+
+    url = "https://easypermit.net/assets/views/phppages/allProjectController.php?offlinePackageRequest=offlinePackageRequest&ProjectId="+projID + "&ServiceId="+servID + "&CurrentUser="+userID;
+
+
+    // Creates the Volley request queue
+    requestQueue = Volley.newRequestQueue(MainActivity.getContext());
+
+    // Casts results into the TextView found within the main layout XML with id jsonData
+
+    // Creating the JsonObjectRequest class called obreq, passing required parameters:
+    //GET is used to fetch data from the server, JsonURL is the URL to be fetched from.
+    JsonObjectRequest obreq = new JsonObjectRequest(Request.Method.GET, url, null,
+            // The third parameter Listener overrides the method onResponse() and passes
+            //JSONObject as a parameter
+            new Response.Listener<JSONObject>() {
+
+                // Takes the response from the JSON request
+                @Override
+                public void onResponse(JSONObject response) {
+                    try {
+
+
+                        JSONArray obj1 = response.getJSONArray("fileList");
+
+
+                        downloadedFileCount = 0;
+
+
+                        String replacement = response.getString("replacement");
+
+                        totalFileCount = Integer.parseInt(response.getString("fileListLength"));
+
+                        final JSONArray arryaList = response.getJSONArray("arraylist");
+
+
+                        allfileList = response.getJSONArray("fileList");
+
+                        Log.i("aaaaaaaaaaaaaa222222" , "Value" + arryaList);
+
+                        DownloadTask downloadTask = new DownloadTask(MainActivity.this);
+                        downloadTask.execute(obj1);
+
+
+
+                        for(int i = 0; i < obj1.length(); i++){
+                            String object = (String) obj1.get(i);
+                            Log.i("aaaaaaaaaaaaaa" , "Value" + object);
+
+
+
+                            //don't add ending slash
+
+                            dataResponse = 1;
+
+
+                            File folder1 = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+
+                            boolean success1 = true;
+                            if (!folder1.exists()) {
+                                Log.i("wait" , "ValueIn1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName());
+                                success1 = folder1.mkdirs();
+                                Log.e("wait" , "ValueIn1" + success1);
+
+                            }
+
+                            File folder2 = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+
+                            boolean success2 = true;
+                            if (!folder2.exists()) {
+                                Log.i("wait" , "ValueIn12222" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName());
+                                success2 = folder2.mkdirs();
+                                Log.e("wait" , "ValueIn1" + success2);
+                            }
+
+                            File folder = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/");
+                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/");
+
+                            boolean success = true;
+                            if (!folder.exists()) {
+                                success = folder.mkdirs();
+                            }
+
+                            File serviceAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/");
+                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/");
+
+                            boolean success__serviceAccount = true;
+                            if (!serviceAccount.exists()) {
+                                success__serviceAccount = serviceAccount.mkdirs();
+                                Log.e("wait" , "ValueIn1" + success__serviceAccount);
+                            }
+
+                            File projectAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + servID + "-" + projID + "/");
+                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + servID + "-" + projID + "/");
+
+                            boolean success__projectAccount = true;
+                            if (!projectAccount.exists()) {
+                                success__projectAccount = projectAccount.mkdirs();
+                                Log.e("wait" , "ValueIn1" + success__projectAccount);
+                            }
+
+                            Log.e("Path check", object);
+
+
+//                            webView.post(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    webView.loadUrl("javascript:download__status('started', "+ totalFileCount +")");
+//                                }
+//                            });
+
+
+                            int _co = 0;
+                            _co++;
+                            Log.d("Runnable" , "URL" + String.valueOf(_co) + " " + isCancelled);
+
+                            if(!isCancelled) {
+
+                                // execute this when the downloader must be fired
+
+
+                            }
+
+//                                    DownloadTask downloadTask = new DownloadTask();
+//
+//
+//
+//                                    downloadTask.replacement = replacement;
+//                                    downloadTask.path = object;
+//                                    downloadTask.suggestedFolder = null;
+//                                    downloadTask.servID = servID;
+//                                    downloadTask.projID = projID;
+//
+//
+//                                    downloadTask.execute();
+
+
+
+
+
+//                        downloadFile("https://easypermit.net/storage/29/Common/39/drw(progress)", object);
+//                        downloadFile("https://easypermit.net/assets/offline", object);
+
+                        }
+
+                        // Adds strings from object to the "data" string
+
+
+                        // Adds the data string to the TextView "results"
+
+                    }
+                    // Try and catch are included to handle any errors due to JSON
+                    catch (JSONException e) {
+                        // If an error occurs, this prints the error to the log
+                        e.printStackTrace();
+                    }
+                }
+            },
+            // The final parameter overrides the method onErrorResponse() and passes VolleyError
+            //as a parameter
+            new Response.ErrorListener() {
+                @Override
+                // Handles errors that occur due to Volley
+                public void onErrorResponse(VolleyError error) {
+                    Log.e("Volley", "Error");
+                }
+            }
+    );
+    // Adds the JSON object request "obreq" to the request queue
+    requestQueue.add(obreq);
+
+    return dataResponse;
+}
 
 
 

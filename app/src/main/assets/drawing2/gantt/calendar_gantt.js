@@ -3413,7 +3413,10 @@ else if(selectedCalendar  == "third"){
 Android.showToast('getData');
 
 
-           function calendar1(a){
+           function calendar1(a, s , p){
+
+              localStorage.setItem('serviceAccount', s);
+  localStorage.setItem('projectId', p);
 
                         console.log("JAVA")
                         console.log(a)

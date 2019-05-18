@@ -49,8 +49,7 @@
         public JSONArray arryaList;
         public String calendar;
 
-        public int totalFileCount = 0;
-        public int downloadedFileCount = 0;
+
 
         public int isDownloadFailed = 0;
 
@@ -93,7 +92,11 @@
                                 JSONArray obj1 = response.getJSONArray("fileList");
 
 
+                                downloadedFileCount = 0;
+
+
                                 String replacement = response.getString("replacement");
+
                                 totalFileCount = Integer.parseInt(response.getString("fileListLength"));
 
                                 final JSONArray arryaList = response.getJSONArray("arraylist");
@@ -168,23 +171,27 @@
                                     webView.post(new Runnable() {
                                         @Override
                                         public void run() {
-                                            webView.loadUrl("javascript:download__status('started')");
+                                            webView.loadUrl("javascript:download__status('started', "+ totalFileCount +")");
                                         }
                                     });
 
 
-                                    DownloadTask downloadTask = new DownloadTask();
+                                    // execute this when the downloader must be fired
+//                                    final MainActivity.DownloadTask downloadTask = new MainActivity.DownloadTask(getContext());
+//                                    downloadTask.execute(object);
 
-
-
-                                    downloadTask.replacement = replacement;
-                                    downloadTask.path = object;
-                                    downloadTask.suggestedFolder = null;
-                                    downloadTask.servID = servID;
-                                    downloadTask.projID = projID;
-
-
-                                    downloadTask.execute();
+//                                    DownloadTask downloadTask = new DownloadTask();
+//
+//
+//
+//                                    downloadTask.replacement = replacement;
+//                                    downloadTask.path = object;
+//                                    downloadTask.suggestedFolder = null;
+//                                    downloadTask.servID = servID;
+//                                    downloadTask.projID = projID;
+//
+//
+//                                    downloadTask.execute();
 
                                     if (isDownloadFailed == 0) {
 
@@ -857,7 +864,7 @@
                 if (DownloadManager.STATUS_SUCCESSFUL == 8) {
                     Log.e("aaaaaaaaaaaaaaaa" , "downloaded");
 
-                    downloadedFileCount++;
+
 
 
                     if(downloadedFileCount == totalFileCount){
@@ -910,17 +917,19 @@
             request1.setDestinationInExternalFilesDir(context, null, "/downloads/" + servID + projID  + replacedStr);
 
             manager1 = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
-            Objects.requireNonNull(manager1).enqueue(request1);
+            if (manager1 != null) {
+                manager1.enqueue(request1);
+            }
             if (DownloadManager.STATUS_SUCCESSFUL == 8) {
                 Log.e("aaaaaaaaaaaaaaaa" , "downloaded");
 
-                downloadedFileCount++;
+//                downloadedFileCount++;
 
 
                 if(downloadedFileCount == totalFileCount){
 
 
-                    MainActivity.downloadComplete();
+//                    MainActivity.downloadComplete();
                 }
 
             }else{
