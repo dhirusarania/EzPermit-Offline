@@ -25,6 +25,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -49,6 +51,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.app.AlertDialog;
@@ -1529,8 +1532,8 @@ public class MainActivity extends FragmentActivity {
 //        webView.loadUrl("javascript:init('androidTest')");
 
 //        webView.loadUrl("https://www.easypermit.net/index");
-//        webView.loadUrl("https://www.easypermit.net/#/login/signin");
-        webView.loadUrl("https://www.easypermit.net/#/app/ViewProjectDetails");
+        webView.loadUrl("https://www.easypermit.net/#/login/signin");
+//        webView.loadUrl("https://www.easypermit.net/#/app/ViewProjectDetails");
 //        webView.loadUrl("https://easypermit.net/#/offline");
 //            webView.loadUrl("file:///android_asset/drawing2/index.html");
 
@@ -1759,6 +1762,8 @@ public class MainActivity extends FragmentActivity {
 
                         isNotFound = true;
 
+                        Log.d("Not Found" , String.valueOf(f));
+
                         break;
 
                     }
@@ -1914,14 +1919,18 @@ public class MainActivity extends FragmentActivity {
         private Context context;
         private PowerManager.WakeLock mWakeLock;
 
+        int progress = 0;
+        Notification notification;
+        NotificationManager notificationManager;
+        NotificationCompat.Builder notificationBuilder;
+
         public DownloadTask(Context context) {
             this.context = context;
         }
 
 
         @Override
-//        protected String doInBackground(String... sUrl) {
-            protected String doInBackground(JSONArray... jsonArrays) {
+        protected String doInBackground(JSONArray... jsonArrays) {
             InputStream input = null;
             OutputStream output = null;
             HttpURLConnection connection = null;
@@ -1931,88 +1940,104 @@ public class MainActivity extends FragmentActivity {
 
             for (int i = 0; i < array.length(); i++) {
 
+                String URL;
                 try {
 
 
-                String URL = (String) array.get(i);
+                    URL = (String) array.get(i);
 
-                URL url = new URL(URL);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
+                    URL url = new URL(URL);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.connect();
 
-                // expect HTTP 200 OK, so we don't mistakenly save error report
-                // instead of the file
-                if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                    return "Server returned HTTP " + connection.getResponseCode()
-                            + " " + connection.getResponseMessage();
-                }
-
-                // this will be useful to display download percentage
-                // might be -1: server did not report the length
-                int fileLength = connection.getContentLength();
-
-
-                String fileName = URL.substring(URL.lastIndexOf('/') + 1, URL.length());
-
-//
-//
-                String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/" + fileName;
-                Log.i("wait", "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/" + fileName);
-
-
-                // download the file
-                input = connection.getInputStream();
-                output = new FileOutputStream(path);
-
-
-
-                byte data[] = new byte[4096];
-                long total = 0;
-                int count;
-                while ((count = input.read(data)) != -1 && !isCancelled) {
-                    // allow canceling with back button
-
-
-
-                    if (isCancelled() || isCancelled) {
-                        input.close();
-                        return null;
+                    // expect HTTP 200 OK, so we don't mistakenly save error report
+                    // instead of the file
+                    if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                        return "Server returned HTTP " + connection.getResponseCode()
+                                + " " + connection.getResponseMessage();
                     }
-                    total += count;
-                    // publishing the progress....
-                    if (fileLength > 0 && !isCancelled) // only if total length is known
-                        publishProgress((int) (total * 100 / fileLength));
-                    output.write(data, 0, count);
+
+                    // this will be useful to display download percentage
+                    // might be -1: server did not report the length
+                    int fileLength = connection.getContentLength();
+
+
+                    String fileName = URL.substring(URL.lastIndexOf('/') + 1, URL.length());
+
+
+                    SharedPreferences prefs = getSharedPreferences("USER_DATA", MODE_PRIVATE);
+
+                    projectid = prefs.getInt("projectid", -37);
+
+                    serviceaccount = prefs.getInt("service_account", -37);
+
+                    currentUserid = prefs.getInt("current_User", -37);
+
+//
+//
+                    String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/" + fileName;
+                    Log.i("wait", "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/" + fileName);
+
+
+                    // download the file
+                    input = connection.getInputStream();
+                    output = new FileOutputStream(path);
+
+
+                    byte data[] = new byte[4096];
+                    long total = 0;
+                    int count;
+                    while ((count = input.read(data)) != -1 && !isCancelled) {
+                        // allow canceling with back button
+
+
+                        if (isCancelled() || isCancelled) {
+                            input.close();
+                            return null;
+                        }
+                        total += count;
+                        // publishing the progress....
+                        if (fileLength > 0 && !isCancelled) // only if total length is known
+                            publishProgress((int) (total * 100 / fileLength));
+                        output.write(data, 0, count);
+                    }
+
+                } catch (Exception e) {
+                    return e.toString();
+                } finally {
+                    try {
+                        if (output != null)
+                            output.close();
+                        if (input != null)
+                            input.close();
+                    } catch (IOException ignored) {
+                    }
+
+                    if (connection != null)
+                        connection.disconnect();
                 }
 
-            } catch (Exception e) {
-                return e.toString();
-            } finally {
-                try {
-                    if (output != null)
-                        output.close();
-                    if (input != null)
-                        input.close();
-                } catch (IOException ignored) {
-                }
+                downloadedFileCount++;
 
-                if (connection != null)
-                    connection.disconnect();
+                Log.d("result", "pendingggggggg" + URL);
+                Log.d("result", "pendingggggggg" + downloadedFileCount);
+
+
             }
-        }
             return null;
         }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+
             // take CPU lock to prevent CPU from going off if the user
             // presses the power button during download
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
             mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
                     getClass().getName());
             mWakeLock.acquire();
-
+//
             mProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener(){
                 // Set a click listener for progress dialog cancel button
                 @Override
@@ -2022,10 +2047,12 @@ public class MainActivity extends FragmentActivity {
                         isCancelled = true;
 
 
+                    Log.d("Runnable" , "called" + isCancelled);
+
                 }
             });
 
-            mProgressDialog.show();
+
         }
 
 
@@ -2033,6 +2060,9 @@ public class MainActivity extends FragmentActivity {
         protected void onProgressUpdate(Integer... progress) {
             super.onProgressUpdate(progress);
             // if we get here, length is known, now set indeterminate to false
+
+            Log.d("result" , "pendingggggggg" + downloadedFileCount);
+
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMax(totalFileCount);
             mProgressDialog.setProgress(downloadedFileCount);
@@ -2044,9 +2074,32 @@ public class MainActivity extends FragmentActivity {
         @Override
         protected void onPostExecute(String result) {
 
+            Log.d("result" , "pendingggggggg" + downloadedFileCount);
 
-            Log.d("onPostExec" , String.valueOf(downloadedFileCount));
-            Log.d("onPostExec" , String.valueOf(result));
+            if (result != null)
+                Log.d("result" , "null");
+            else
+                Log.d("result" , "not_null");
+
+
+
+//            webView.post(new Runnable() {
+//                @Override
+//                public void run() {
+//                    webView.loadUrl("javascript:download__status('resume', " + downloadedFileCount + ")");
+//                }
+//            });
+
+
+
+//                            Toast.makeText(context,"File downloaded", Toast.LENGTH_SHORT).show();
+
+
+
+//            if (result != null)
+//                Toast.makeText(context,"Download error: "+result, Toast.LENGTH_LONG).show();
+//            else
+//                Toast.makeText(context,"File downloaded", Toast.LENGTH_SHORT).show(); downloadedFileCount++;
 
             if(totalFileCount == downloadedFileCount){
 
@@ -2060,11 +2113,7 @@ public class MainActivity extends FragmentActivity {
 
             }
 
-            if (result != null)
-                Toast.makeText(context,"Download error: "+result, Toast.LENGTH_LONG).show();
-            else
-                Toast.makeText(context,"File downloaded", Toast.LENGTH_SHORT).show(); downloadedFileCount++;
-        }
+    }
 
     }
 
@@ -2091,6 +2140,10 @@ public int sendAndRequestResponse(final int projID, final int servID, int userID
 
 
     Log.i("aaaaaaaaaaaaaa" , "Value" + projID + "/" + servID);
+
+
+    mProgressDialog.show();
+
 
 
     url = "https://easypermit.net/assets/views/phppages/allProjectController.php?offlinePackageRequest=offlinePackageRequest&ProjectId="+projID + "&ServiceId="+servID + "&CurrentUser="+userID;
@@ -2131,112 +2184,169 @@ public int sendAndRequestResponse(final int projID, final int servID, int userID
 
                         Log.i("aaaaaaaaaaaaaa222222" , "Value" + arryaList);
 
+
+                        File folder1 = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+                        Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+
+                        boolean success1 = true;
+                        if (!folder1.exists()) {
+                            Log.i("wait" , "ValueIn1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName());
+                            success1 = folder1.mkdirs();
+                            Log.e("wait" , "ValueIn1" + success1);
+
+                        }
+
+                        File folder2 = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+                        Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+
+                        boolean success2 = true;
+                        if (!folder2.exists()) {
+                            Log.i("wait" , "ValueIn12222" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName());
+                            success2 = folder2.mkdirs();
+                            Log.e("wait" , "ValueIn1" + success2);
+                        }
+
+                        File folder = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/");
+                        Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/");
+
+                        boolean success = true;
+                        if (!folder.exists()) {
+                            success = folder.mkdirs();
+                        }
+
+                        File serviceAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/");
+                        Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/");
+
+                        boolean success__serviceAccount = true;
+                        if (!serviceAccount.exists()) {
+                            success__serviceAccount = serviceAccount.mkdirs();
+                            Log.e("wait" , "ValueIn1" + success__serviceAccount);
+                        }
+
+                        File projectAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + servID + "-" + projID + "/");
+                        Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + servID + "-" + projID + "/");
+
+                        boolean success__projectAccount = true;
+                        if (!projectAccount.exists()) {
+                            success__projectAccount = projectAccount.mkdirs();
+                            Log.e("wait" , "ValueIn1" + success__projectAccount);
+                        }
+
+
                         DownloadTask downloadTask = new DownloadTask(MainActivity.this);
                         downloadTask.execute(obj1);
 
 
 
-                        for(int i = 0; i < obj1.length(); i++){
-                            String object = (String) obj1.get(i);
-                            Log.i("aaaaaaaaaaaaaa" , "Value" + object);
-
-
-
-                            //don't add ending slash
-
-                            dataResponse = 1;
-
-
-                            File folder1 = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
-                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
-
-                            boolean success1 = true;
-                            if (!folder1.exists()) {
-                                Log.i("wait" , "ValueIn1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName());
-                                success1 = folder1.mkdirs();
-                                Log.e("wait" , "ValueIn1" + success1);
-
-                            }
-
-                            File folder2 = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
-                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
-
-                            boolean success2 = true;
-                            if (!folder2.exists()) {
-                                Log.i("wait" , "ValueIn12222" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName());
-                                success2 = folder2.mkdirs();
-                                Log.e("wait" , "ValueIn1" + success2);
-                            }
-
-                            File folder = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/");
-                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/");
-
-                            boolean success = true;
-                            if (!folder.exists()) {
-                                success = folder.mkdirs();
-                            }
-
-                            File serviceAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/");
-                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/");
-
-                            boolean success__serviceAccount = true;
-                            if (!serviceAccount.exists()) {
-                                success__serviceAccount = serviceAccount.mkdirs();
-                                Log.e("wait" , "ValueIn1" + success__serviceAccount);
-                            }
-
-                            File projectAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + servID + "-" + projID + "/");
-                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + servID + "-" + projID + "/");
-
-                            boolean success__projectAccount = true;
-                            if (!projectAccount.exists()) {
-                                success__projectAccount = projectAccount.mkdirs();
-                                Log.e("wait" , "ValueIn1" + success__projectAccount);
-                            }
-
-                            Log.e("Path check", object);
-
-
-//                            webView.post(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    webView.loadUrl("javascript:download__status('started', "+ totalFileCount +")");
-//                                }
-//                            });
-
-
-                            int _co = 0;
-                            _co++;
-                            Log.d("Runnable" , "URL" + String.valueOf(_co) + " " + isCancelled);
-
-                            if(!isCancelled) {
-
-                                // execute this when the downloader must be fired
-
-
-                            }
-
-//                                    DownloadTask downloadTask = new DownloadTask();
+//                        for(int i = 0; i < obj1.length(); i++){
+//                            String object = (String) obj1.get(i);
+//                            Log.i("aaaaaaaaaaaaaa" , "Value" + object);
 //
 //
 //
-//                                    downloadTask.replacement = replacement;
-//                                    downloadTask.path = object;
-//                                    downloadTask.suggestedFolder = null;
-//                                    downloadTask.servID = servID;
-//                                    downloadTask.projID = projID;
+//                            //don't add ending slash
+//
+//                            dataResponse = 1;
 //
 //
-//                                    downloadTask.execute();
-
-
-
-
-
-//                        downloadFile("https://easypermit.net/storage/29/Common/39/drw(progress)", object);
-//                        downloadFile("https://easypermit.net/assets/offline", object);
-
-                        }
+////                            File folder1 = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+////                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+////
+////                            boolean success1 = true;
+////                            if (!folder1.exists()) {
+////                                Log.i("wait" , "ValueIn1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName());
+////                                success1 = folder1.mkdirs();
+////                                Log.e("wait" , "ValueIn1" + success1);
+////
+////                            }
+////
+////                            File folder2 = new File(Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+////                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory() + "/Android/data/" + getClass().getPackage().getName());
+////
+////                            boolean success2 = true;
+////                            if (!folder2.exists()) {
+////                                Log.i("wait" , "ValueIn12222" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName());
+////                                success2 = folder2.mkdirs();
+////                                Log.e("wait" , "ValueIn1" + success2);
+////                            }
+////
+////                            File folder = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/");
+////                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/");
+////
+////                            boolean success = true;
+////                            if (!folder.exists()) {
+////                                success = folder.mkdirs();
+////                            }
+////
+////                            File serviceAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/");
+////                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/");
+////
+////                            boolean success__serviceAccount = true;
+////                            if (!serviceAccount.exists()) {
+////                                success__serviceAccount = serviceAccount.mkdirs();
+////                                Log.e("wait" , "ValueIn1" + success__serviceAccount);
+////                            }
+////
+////                            File projectAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + servID + "-" + projID + "/");
+////                            Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + servID + "-" + projID + "/");
+////
+////                            boolean success__projectAccount = true;
+////                            if (!projectAccount.exists()) {
+////                                success__projectAccount = projectAccount.mkdirs();
+////                                Log.e("wait" , "ValueIn1" + success__projectAccount);
+////                            }
+//
+//                            Log.e("Path check", object);
+//
+//
+////                            webView.post(new Runnable() {
+////                                @Override
+////                                public void run() {
+////                                    webView.loadUrl("javascript:download__status('started', "+ totalFileCount +")");
+////                                }
+////                            });
+//
+//
+////                            webView.post(new Runnable() {
+////                                @Override
+////                                public void run() {
+////                                    webView.loadUrl("javascript:download__status('started', "+ totalFileCount +")");
+////                                }
+////                            });
+//
+//                            if(!isCancelled) {
+//
+//
+////                                DownloadTask downloadTask = new DownloadTask(MainActivity.this);
+////                                downloadTask.execute(object);
+//
+//
+//                                // execute this when the downloader must be fired
+//
+//
+//                            }
+//
+////                                    DownloadTask downloadTask = new DownloadTask();
+////
+////
+////
+////                                    downloadTask.replacement = replacement;
+////                                    downloadTask.path = object;
+////                                    downloadTask.suggestedFolder = null;
+////                                    downloadTask.servID = servID;
+////                                    downloadTask.projID = projID;
+////
+////
+////                                    downloadTask.execute();
+//
+//
+//
+//
+//
+////                        downloadFile("https://easypermit.net/storage/29/Common/39/drw(progress)", object);
+////                        downloadFile("https://easypermit.net/assets/offline", object);
+//
+//                        }
 
                         // Adds strings from object to the "data" string
 
@@ -2257,7 +2367,7 @@ public int sendAndRequestResponse(final int projID, final int servID, int userID
                 @Override
                 // Handles errors that occur due to Volley
                 public void onErrorResponse(VolleyError error) {
-                    Log.e("Volley", "Error");
+                    Log.e("Volley", "Error" + error);
                 }
             }
     );
@@ -2266,6 +2376,7 @@ public int sendAndRequestResponse(final int projID, final int servID, int userID
 
     return dataResponse;
 }
+
 
 
 
