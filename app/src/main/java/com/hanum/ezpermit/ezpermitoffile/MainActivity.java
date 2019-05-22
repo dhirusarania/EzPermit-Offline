@@ -76,6 +76,8 @@ import com.android.volley.toolbox.Volley;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -121,17 +123,15 @@ public class MainActivity extends FragmentActivity {
 
     public String foldername;
 
-    public static JSONArray allfileList;
-
-    public JSONObject canvasData = new JSONObject();
-    public JSONArray layersList = new JSONArray();
+    public JSONArray allfileList;
 
     public JSONObject finalJ = new JSONObject();
     public JSONObject student1 = new JSONObject();
 
-    public JSONArray jsonArray = new JSONArray();
 
     public int CAPTURE_MODE = 0;
+
+    public String replacement;
 
 
     public int downloadedFileCount = 0;
@@ -223,7 +223,7 @@ public class MainActivity extends FragmentActivity {
             webView.post(new Runnable() {
                 @Override
                 public void run() {
-                    webView.loadUrl("javascript:sendVideo('"+ String.valueOf(getRealPathFromURI(finalVideoUri)) +"' , 1, 66565)"); //if passing in an object. Mapping may need to take place
+                    webView.loadUrl("javascript:sendVideo('"+ String.valueOf(getRealPathFromURI(finalVideoUri)) +"' , -37)"); //if passing in an object. Mapping may need to take place
                 }
             });
 
@@ -402,6 +402,8 @@ public class MainActivity extends FragmentActivity {
 
                 String singleLayerData = readFile(path);
 
+                singleLayerData = StringEscapeUtils.unescapeJava(singleLayerData);
+
                 singleLayerData = convertJSONString(singleLayerData);
 
                 singleLayerData = trimDoubleQuotes(singleLayerData);
@@ -415,7 +417,7 @@ public class MainActivity extends FragmentActivity {
                 webView.post(new Runnable() {
                     @Override
                     public void run() {
-                        webView.loadUrl("javascript:calendar1(" + finalSingleLayerData + " , " + serviceaccount + " , " + projectid + ")"); //if passing in an object. Mapping may need to take place
+                        webView.loadUrl("javascript:calendar1(" + finalSingleLayerData + " , " + serviceaccount + " , " + projectid + " , " + currentUserid + ")"); //if passing in an object. Mapping may need to take place
                     }
                 });
 
@@ -568,6 +570,9 @@ public class MainActivity extends FragmentActivity {
 
                     String singleLayerData = readFile(path);
 
+
+                    singleLayerData = StringEscapeUtils.unescapeJava(singleLayerData);
+
                     singleLayerData = convertJSONString(singleLayerData);
 
                     singleLayerData = trimDoubleQuotes(singleLayerData);
@@ -588,7 +593,7 @@ public class MainActivity extends FragmentActivity {
                                 //"javascript:<your javaScript function"
 
 
-                                view.loadUrl("javascript:calendar1(" + finalSingleLayerData + " , " + serviceaccount + " , " + projectid + ")"); //if passing in an object. Mapping may need to take place
+                                view.loadUrl("javascript:calendar1(" + finalSingleLayerData + " , " + serviceaccount + " , " + projectid + ", " + currentUserid + ")"); //if passing in an object. Mapping may need to take place
                             }
                         });
                     }
@@ -832,7 +837,7 @@ public class MainActivity extends FragmentActivity {
             Log.d("Files", "FileName:1" + foldername);
         }
 
-        String filename = foldername.replace("file:////storage/emulated/0/Android/data/com.hanum.ezpermit.ezpermitoffile/files/", "");
+        String filename = foldername.replace("file:////storage/emulated/0/Android/data/com.hanum.ezpermit.ezpermitoffile/files/downloads/" + serviceaccount + "-" + projectid , "");
 
         Log.d("Files", "new filenames" + foldername);
 
@@ -843,8 +848,8 @@ public class MainActivity extends FragmentActivity {
 
         Log.d("Files", "new filenames" + foldername + "/" + activeLayer );
 
-        File folder = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/" + filename + "/" + activeLayer + "/");
-        Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/" + filename + "/" + activeLayer + "/");
+        File folder = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid  + "/"  + filename + "/" + activeLayer + "/");
+        Log.i("wait" , "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid  + "/" + filename + "/" + activeLayer + "/");
 
         boolean success = true;
         if (!folder.exists()) {
@@ -858,10 +863,10 @@ public class MainActivity extends FragmentActivity {
 
         // Do something on success
         File sdCard = Environment.getExternalStorageDirectory();
-        String abspath = sdCard.getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/" + filename + "/" + filename + "." +  ext + "-" + activeLayer +  ".ezp";
+        String abspath = sdCard.getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid  + "/" + filename + "/" + filename + "." +  ext + "-" + activeLayer +  ".ezp";
 
 
-        String mainFilePath = sdCard.getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/" + filename + "/" + filename + "." +  ext + ".ezp";
+        String mainFilePath = sdCard.getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid  + "/" + filename + "/" + filename + "." +  ext + ".ezp";
 
         Log.i("wait" , "wait" + abspath);
         Log.i("wait" , "wait" + mainFilePath);
@@ -890,6 +895,37 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void writetoMainFile(String activeLayer , String path) {
+
+
+//        path = "/storage/emulated/0/Android/data/com.hanum.ezpermit.ezpermitoffile/files/downloads/29-160//140416-D-R14-PP-PPD-1503_0//140416-D-R14-PP-PPD-1503_0.pdf.ezp";
+
+        Log.d("Files", "Path: " + path);
+
+        File file = new File(path);
+
+        if(!file.exists()){
+
+            Writer writer = null;
+
+            try {
+                file.createNewFile();
+                try {
+                    writer = new BufferedWriter(new OutputStreamWriter(
+                            new FileOutputStream(path), "utf-8"));
+                    writer.write("a:1:{i:0;s:18:'"+ activeLayer +"';}");
+                } catch (IOException ex) {
+                    // Report
+                    ex.printStackTrace();
+
+                }
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        }
 
 
         String read = readFile(path);
@@ -926,6 +962,14 @@ public class MainActivity extends FragmentActivity {
     }
 
     private void checkifFileExist(String arg_filename , String arg_o_filename) {
+
+
+
+
+        JSONObject canvasData = new JSONObject();
+        JSONArray layersList = new JSONArray();
+        JSONObject allitems = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
 
         Log.d("Original", "ssS" + arg_filename + arg_o_filename);
 
@@ -973,45 +1017,44 @@ public class MainActivity extends FragmentActivity {
 //
 //        }
 
-
-        String a = readFile(path);
-
+if(directory.exists()) {
 
 
-
-        Log.d("Files", "FileName:1" + a);
-
-
-        //get all layer list from main EZP file
+    Log.d("Files", "FileOGPath" + path);
 
 
-
-        MixedArray list;
-
-        list = Pherialize.unserialize(a).toArray();
-
-        Log.d("Files", "FileName:1" + list);
-
-        int i = 0;
+    String a = readFile(path);
 
 
-
-        JSONArray alllayersList = new JSONArray();
-        JSONObject imageCountArray = new JSONObject();
+    Log.d("Files", "FileNameReadFile" + a);
 
 
-        while (i < list.size()) {
-            Log.d("Files", "FileName:Data" + list.getString(i));
-
-            String layers = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/" + foldername + "/" + originalFilename + "-" + list.getString(i) + ".ezp";
-
-            Log.d("Files", "FileName:Layers" + layers);
+    //get all layer list from main EZP file
 
 
-            //            Log.d("Files", "FileName:singleLayerData" + singleLayerData);
+    MixedArray list;
+
+    list = Pherialize.unserialize(a).toArray();
+
+    Log.d("Files", "FileName:1" + list);
 
 
+    int i = 0;
 
+
+    JSONArray alllayersList = new JSONArray();
+    JSONObject imageCountArray = new JSONObject();
+
+
+    while (i < list.size()) {
+        Log.d("Files", "FileName:Data" + list.getString(i));
+
+        String layers = sdCard.getAbsolutePath() + "/Android/data/" + getPackageName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/" + foldername + "/" + originalFilename + "-" + list.getString(i) + ".ezp";
+
+        Log.d("Files", "FileName:Layers" + layers);
+
+
+        //            Log.d("Files", "FileName:singleLayerData" + singleLayerData);
 
 
 //
@@ -1026,25 +1069,29 @@ public class MainActivity extends FragmentActivity {
 
 //            Log.d("Files", "FileName:singleLayerData1" + singleLayerData1);
 
-           String singleLayerData = readFile(layers);
-
-           singleLayerData = convertJSONString(singleLayerData);
-
-            singleLayerData = trimDoubleQuotes(singleLayerData);
+        String singleLayerData = readFile(layers);
 
 
+        singleLayerData = StringEscapeUtils.unescapeJava(singleLayerData);
+
+        Log.d("Files", "FileName:singleLayerDatasingleLayerData" + singleLayerData);
 
 
-            try {
+        singleLayerData = convertJSONString(singleLayerData);
 
-                String regex = "/\\r?\\n|\\r/g";
+        singleLayerData = trimDoubleQuotes(singleLayerData);
 
-                singleLayerData = singleLayerData.replaceAll(regex, singleLayerData);
+
+        try {
+
+            String regex = "/\\r?\\n|\\r/g";
+
+            singleLayerData = singleLayerData.replaceAll(regex, singleLayerData);
 
 //                Log.d("single" , singleLayerData);
 
 
-                final int chunkSize = 2048;
+            final int chunkSize = 2048;
             for (int j = 0; j < singleLayerData.length(); j += chunkSize) {
                 Log.e("singleLayerData", singleLayerData.substring(j, Math.min(singleLayerData.length(), j + chunkSize)));
             }
@@ -1052,18 +1099,18 @@ public class MainActivity extends FragmentActivity {
 
             Log.d("Files", "FileName:singleLayerData1" + singleLayerData);
 
-                JSONObject jsonObject = new JSONObject(singleLayerData);
-                //getting specific key values
+            JSONObject jsonObject = new JSONObject(singleLayerData);
+            //getting specific key values
 
-                String jsonObject1 = jsonObject.getString("canvasData");
+            String jsonObject1 = jsonObject.getString("canvasData");
 
-                JSONArray array1 = new JSONArray(jsonObject1);
-                for (int l = 0; l < array1.length(); l++) {
-                    JSONObject row = array1.getJSONObject(l);
+            JSONArray array1 = new JSONArray(jsonObject1);
+            for (int l = 0; l < array1.length(); l++) {
+                JSONObject row = array1.getJSONObject(l);
 
-                    jsonArray.put(row);
+                jsonArray.put(row);
 
-                }
+            }
 
 
 //                student1.put("canvasData", jsonArray);
@@ -1088,24 +1135,22 @@ public class MainActivity extends FragmentActivity {
 //                });
 
 
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
 
 
-            }catch (Exception ex) {
-                ex.printStackTrace();
-            }
+        try {
+            JSONObject jsonObject = new JSONObject(singleLayerData);
+            //getting specific key values
 
+            String jsonObject1 = jsonObject.getString("layers");
 
-            try {
-                JSONObject jsonObject = new JSONObject(singleLayerData);
-                //getting specific key values
+            Log.d("jsonLength ", "sss" + jsonObject1);
 
-                String jsonObject1 = jsonObject.getString("layers");
+            JSONObject jsonObject2 = new JSONObject(jsonObject1);
 
-                Log.d("jsonLength ", "sss" + jsonObject1);
-
-                JSONObject jsonObject2 = new JSONObject(jsonObject1);
-
-                layersList.put(jsonObject2);
+            layersList.put(jsonObject2);
 
 //                for (int l = 0; l < array1.length(); l++) {
 //                    JSONObject row = array1.getJSONObject(l);
@@ -1115,54 +1160,124 @@ public class MainActivity extends FragmentActivity {
 //                }
 
 
-                Log.d("jsonArray = ", "sss" + jsonObject2);
+            Log.d("jsonArray = ", "sss" + jsonObject2);
 
 
-
-
-
-            }catch (Exception ex) {
-                ex.printStackTrace();
-            }
-
-            Log.d("layersList", "sss" + layersList);
-
-
-            //layerslist
-
-            alllayersList.put(list.getString(i));
-
-
-            i++;
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+
 
         try {
-            imageCountArray.put("undefined3511555105048664" , 1);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            JSONObject jsonObject = new JSONObject(singleLayerData);
+            //getting specific key values
+
+            String jsonObject1 = jsonObject.getString("allitems");
+
+            Log.d("allitemsMy ", "sss" + jsonObject1);
+
+                JSONObject jsonObject2 = new JSONObject(jsonObject1);
+
+
+                  Log.e("allitem" , "Sss" + jsonObject2.getJSONObject(list.getString(i)) );
+
+            allitems.put(list.getString(i) , jsonObject2.getJSONObject(list.getString(i)));
+
+//                for (int l = 0; l < array1.length(); l++) {
+//                    JSONObject row = array1.getJSONObject(l);
+//
+//                    jsonArray.put(row);
+//
+//                }
+
+
+//                Log.d("jsonArray = ", "sss" + jsonObject2);
+
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
-        try {
-            finalJ.put("layers" , layersList);
-            finalJ.put("canvasData" , jsonArray);
-            finalJ.put("layerList" , alllayersList);
-            finalJ.put("imageCountArray" , imageCountArray);
-            finalJ.put("allitems" , "{\"undefined3511555105048664\":{\"1\":[]}}");
-            finalJ.put("status" , 1);
-            finalJ.put("eyeIcon" , "{}");
-        } catch (JSONException e) {
-            e.printStackTrace();
+        Log.d("layersList", "sss" + layersList);
+
+
+        //layerslist
+
+        alllayersList.put(list.getString(i));
+
+
+        i++;
+    }
+
+    try {
+        imageCountArray.put("undefined3511555105048664", 1);
+    } catch (JSONException e) {
+        e.printStackTrace();
+    }
+
+    try {
+
+        finalJ = new JSONObject();
+
+        JSONArray empty = new JSONArray();
+
+        finalJ.put("layers", layersList);
+        finalJ.put("canvasData", jsonArray);
+        finalJ.put("layerList", alllayersList);
+        finalJ.put("imageCountArray", imageCountArray);
+        finalJ.put("allitems", allitems);
+        finalJ.put("status", 1);
+        finalJ.put("eyeIcon", empty);
+        Log.d("jsonArray = ", "sss" + finalJ);
+        Log.d("jsonArray = ", "l;ayerls" + jsonArray);
+    } catch (JSONException e) {
+        e.printStackTrace();
+    }
+
+
+    webView.post(new Runnable() {
+        @Override
+        public void run() {
+
+            webView.loadUrl("javascript:java(" + finalJ + ")"); //if passing in an object. Mapping may need to take place
+
         }
+    });
+
+}else{
 
 
-        webView.post(new Runnable() {
-            @Override
-            public void run() {
-                webView.loadUrl("javascript:java("+ finalJ +")"); //if passing in an object. Mapping may need to take place
-            }
-        });
+    try {
+
+        finalJ = new JSONObject();
+
+//        finalJ.put("layers", layersList);
+//        finalJ.put("canvasData", jsonArray);
+        finalJ.put("layerList", false);
+//        finalJ.put("imageCountArray", imageCountArray);
+//        finalJ.put("allitems", "{\"undefined3511555105048664\":{\"1\":[]}}");
+        finalJ.put("status", 0);
+//        finalJ.put("eyeIcon", "{}");
+        Log.d("jsonArray = ", "sss" + finalJ);
+        Log.d("jsonArray = ", "l;ayerls" + layersList);
+    } catch (JSONException e) {
+        e.printStackTrace();
+    }
 
 
+    webView.post(new Runnable() {
+        @Override
+        public void run() {
+
+            webView.loadUrl("javascript:java(" + finalJ + ")"); //if passing in an object. Mapping may need to take place
+
+        }
+    });
+
+
+
+
+}
 
 
     }
@@ -1185,7 +1300,7 @@ public class MainActivity extends FragmentActivity {
 
     public String readFile(String path){
 
-        Log.d("Files", "is this running :1");
+        Log.d("Files", "is this running :1 readFIle path" + path);
 
 
         File file = new File(path);
@@ -1532,8 +1647,8 @@ public class MainActivity extends FragmentActivity {
 //        webView.loadUrl("javascript:init('androidTest')");
 
 //        webView.loadUrl("https://www.easypermit.net/index");
-        webView.loadUrl("https://www.easypermit.net/#/login/signin");
-//        webView.loadUrl("https://www.easypermit.net/#/app/ViewProjectDetails");
+//        webView.loadUrl("https://www.easypermit.net/#/login/signin");
+        webView.loadUrl("https://www.easypermit.net/#/app/ViewProjectDetails");
 //        webView.loadUrl("https://easypermit.net/#/offline");
 //            webView.loadUrl("file:///android_asset/drawing2/index.html");
 
@@ -1617,7 +1732,7 @@ public class MainActivity extends FragmentActivity {
         webView.post(new Runnable() {
             @Override
             public void run() {
-                webView.loadUrl("javascript:calendar1('"+ finalDownloadResponse +" , " + serviceaccount + " , " + projectid + "')"); //if passing in an object. Mapping may need to take place
+                webView.loadUrl("javascript:calendar1('"+ finalDownloadResponse +" , " + serviceaccount + " , " + projectid + ", " + currentUserid + "')"); //if passing in an object. Mapping may need to take place
             }
         });
 
@@ -1946,6 +2061,81 @@ public class MainActivity extends FragmentActivity {
 
                     URL = (String) array.get(i);
 
+
+                    Log.e("URL" , URL);
+
+
+
+
+
+
+                    /**
+                     *  Modify it to a better function
+                     */
+
+                    Log.e("URL" , URL);
+
+
+                    String replacedStr = URL.replace(replacement, "");
+
+                    Log.e("URL-replace" , replacedStr);
+
+                    String baseName = FilenameUtils.getName(replacedStr);
+
+                    String finalName = replacedStr.replace(baseName, "");
+
+                    Log.e("URL-finale" , finalName);
+
+                    if(!finalName.equals("/")) {
+
+                        File projectAccount = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + finalName);
+                        Log.i("wait", "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + finalName);
+
+
+
+
+                        boolean success__projectAccount = true;
+                        if (!projectAccount.exists()) {
+                            success__projectAccount = projectAccount.mkdirs();
+                            Log.e("wait" , "ValueIn1" + success__projectAccount);
+                        }
+
+
+
+                    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     URL url = new URL(URL);
                     connection = (HttpURLConnection) url.openConnection();
                     connection.connect();
@@ -1975,8 +2165,8 @@ public class MainActivity extends FragmentActivity {
 
 //
 //
-                    String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/" + fileName;
-                    Log.i("wait", "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + "/" + fileName);
+                    String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + finalName + fileName;
+                    Log.i("wait", "Value1" + Environment.getExternalStorageDirectory().getAbsolutePath() + "/Android/data/" + getClass().getPackage().getName() + "/files/downloads/" + serviceaccount + "-" + projectid + finalName + fileName);
 
 
                     // download the file
@@ -2063,9 +2253,18 @@ public class MainActivity extends FragmentActivity {
 
             Log.d("result" , "pendingggggggg" + downloadedFileCount);
 
-            mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMax(totalFileCount);
-            mProgressDialog.setProgress(downloadedFileCount);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+
+                    mProgressDialog.setIndeterminate(false);
+                    mProgressDialog.setMax(totalFileCount);
+                    mProgressDialog.setProgress(downloadedFileCount);
+
+                }
+            });
+
 
 
 
@@ -2142,7 +2341,17 @@ public int sendAndRequestResponse(final int projID, final int servID, int userID
     Log.i("aaaaaaaaaaaaaa" , "Value" + projID + "/" + servID);
 
 
-    mProgressDialog.show();
+    runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+
+
+            mProgressDialog.show();
+
+        }
+    });
+
+
 
 
 
@@ -2173,7 +2382,7 @@ public int sendAndRequestResponse(final int projID, final int servID, int userID
                         downloadedFileCount = 0;
 
 
-                        String replacement = response.getString("replacement");
+                        replacement = response.getString("replacement");
 
                         totalFileCount = Integer.parseInt(response.getString("fileListLength"));
 
